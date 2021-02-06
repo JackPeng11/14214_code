@@ -15,4 +15,10 @@ dependencies {
      * Other Modules
      */
     implementation project(':FtcRobotController')
+    implementation('com.acmerobotics.dashboard:dashboard:0.4.0') {
+        exclude group: 'org.firstinspires.ftc'
+    }
+    implementation 'org.openftc:easyopencv:1.4.3'
+    implementation 'com.arcrobotics.ftclib:vision:1.1.0' // vision
+    implementation 'com.arcrobotics:ftclib:1.1.6' // core
 }
