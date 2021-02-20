@@ -132,7 +132,7 @@ public final class FinalTeleop extends LinearOpMode
     {
         if (gamepad2.right_trigger > 0.5)
         {
-            setVelocity(flyWheel, 0.74);
+            setVelocity(flyWheel, 0.69);
             
             ++toggleRingFlowCount;
             
