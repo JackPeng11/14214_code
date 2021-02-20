@@ -138,7 +138,7 @@ public final class FinalTeleop extends LinearOpMode
             }
             else
             {
-                setVelocity(flyWheel, 0.64);
+                setVelocity(flyWheel, 0.4);
             }
             ++toggleRingFlowCount;
             
