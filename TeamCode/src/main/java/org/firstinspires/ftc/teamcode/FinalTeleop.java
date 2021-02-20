@@ -138,7 +138,7 @@ public final class FinalTeleop extends LinearOpMode
             }
             else
             {
-                setVelocity(flyWheel, 0);
+                setVelocity(flyWheel, 0.4);
             }
             ++toggleRingFlowCount;
             
@@ -174,7 +174,7 @@ public final class FinalTeleop extends LinearOpMode
             
             if (gamepad2.left_bumper)
             {
-                setVelocity(spinner, 0.6);
+                setVelocity(spinner, 0.64);
             }
         }
         else
