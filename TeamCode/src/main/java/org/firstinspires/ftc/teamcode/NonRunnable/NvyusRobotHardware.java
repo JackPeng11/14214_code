@@ -19,8 +19,8 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.*;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.*;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_ARM_COUNTS_PER_REV;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_CLOSED_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_OPEN_POSITION;
@@ -90,7 +90,7 @@ public final class NvyusRobotHardware
         tubeIntake.setZeroPowerBehavior(FLOAT);
         
         //changed flywheel PID from default for better shooting
-        flyWheel.setVelocityPIDFCoefficients(50, 0, 0, 15);
+        flyWheel.setVelocityPIDFCoefficients(100, 0, 0, 15);
         
         guide  = opMode.hardwareMap.get(Servo.class, "guide");
         wobble = opMode.hardwareMap.get(Servo.class, "wobble");
