@@ -17,6 +17,7 @@ public final class OneRingBehavior
     {
         phoneCam.closeCameraDevice();
         DrivePath strafeRightAtBeginning = new DrivePath(0.4, 16, DriveMode.FORWARD, opMode);
+        DrivePath advanceToShootingLine = new DrivePath(0.4, 69, DriveMode.FORWARD, opMode);
         strafeRightAtBeginning.go();
     }
 }
