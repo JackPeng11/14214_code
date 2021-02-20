@@ -2,18 +2,12 @@ package org.firstinspires.ftc.teamcode.NonRunnable;
 
 public class Button
 {
-    private boolean    wasPressed        = false;
-    private boolean    finishedExecuting = true;
-    private ButtonType buttonType;
+    private boolean wasPressed        = false;
+    private boolean finishedExecuting = true;
     
     public Button()
     {
     
-    }
-    
-    public Button(ButtonType buttonType)
-    {
-        this.buttonType = buttonType;
     }
     
     public boolean isPressed(boolean button)
@@ -27,18 +21,8 @@ public class Button
         return button && !tempWasPressed;
     }
     
-    public boolean isAlreadyFinished()
-    {
-        return finishedExecuting;
-    }
-    
     public void isFinished()
     {
         finishedExecuting = true;
-    }
-    
-    public enum ButtonType
-    {
-        TOGGLE, HOLD_PRESSED;
     }
 }

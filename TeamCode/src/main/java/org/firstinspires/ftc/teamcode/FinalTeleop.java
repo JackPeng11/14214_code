@@ -85,7 +85,7 @@ public final class FinalTeleop extends LinearOpMode
         
         normalizeVelocities();
         
-        if (toggleSlowMode.isPressed(gamepad1.left_bumper))
+        if (toggleSlowMode.isPressed(gamepad1.y))
         {
             slowMode = !slowMode;
         }
@@ -132,8 +132,14 @@ public final class FinalTeleop extends LinearOpMode
     {
         if (gamepad2.right_trigger > 0.5)
         {
-            setVelocity(flyWheel, 0.69);
-            
+            if (gamepad2.left_trigger > 0.5)
+            {
+               setVelocity(flyWheel, 0.1469);
+            }
+            else
+            {
+                setVelocity(flyWheel, 0.32);
+            }
             ++toggleRingFlowCount;
             
             if (toggleRingFlowCount == 1)
@@ -173,7 +179,7 @@ public final class FinalTeleop extends LinearOpMode
         }
         else
         {
-            setVelocity(flyWheel, 0.1);
+            setVelocity(flyWheel, 0.05);
             guide.setPosition(GUIDE_OPEN_POSITION);
             sleep(0);
             idle();
