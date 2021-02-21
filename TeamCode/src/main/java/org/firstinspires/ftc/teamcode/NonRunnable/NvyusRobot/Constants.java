@@ -1,27 +1,29 @@
-package org.firstinspires.ftc.teamcode.NonRunnable;
+package org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot;
 
-public final class NvyusRobotConstants
+public final class Constants
 {
-    //restrict instantiation
-    private NvyusRobotConstants()
-    {
-    }
-
+    public static final double WOBBLE_OPEN_POSITION = 0.5;
+    
     //Encoder counts
     public static final double MAX_COUNTS_PER_SECOND     = 2800;
     public static final double COUNTS_PER_INCH           = 32.30659664;
     public static final double WOBBLE_ARM_COUNTS_PER_REV = 4275.6;
     public static final double WOBBLE_ARM_COUNTS_PER_DEG = WOBBLE_ARM_COUNTS_PER_REV / 360;
-
+    
     //Servo Positions
     //Open means not in contact with anything, closed means touching
     public static final double FLAP_OPEN_POSITION     = 1;
     public static final double FLAP_CLOSED_POSITION   = 0.7;
-    public static final double WOBBLE_OPEN_POSITION   = 0;
-    public static final double WOBBLE_CLOSED_POSITION = 1;
-    public static final double GUIDE_OPEN_POSITION    = 0.99;
-    public static final double GUIDE_CLOSED_POSITION  = 0.87;
-
+    public static final double WOBBLE_CLOSED_POSITION = 0.91;
+    
+    //restrict instantiation
+    private Constants()
+    {
+    }
+    
+    public static final double GUIDE_OPEN_POSITION   = 0.99;
+    public static final double GUIDE_CLOSED_POSITION = 0.87;
+    
     //Start and end deceleration distances
     public static final double INITIAL_SLOW            = 6;
     public static final double FINAL_SLOW              = 10;

@@ -3,13 +3,13 @@ package org.firstinspires.ftc.teamcode.NonRunnable.Functions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setVelocity;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FLAP_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FLAP_OPEN_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.GUIDE_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.GUIDE_OPEN_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flap;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.guide;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.spinner;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GUIDE_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GUIDE_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flap;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.guide;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.spinner;
 
 public final class IntakeFunctions
 {

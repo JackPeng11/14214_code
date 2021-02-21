@@ -1,13 +1,13 @@
-package org.firstinspires.ftc.teamcode.Auto;
+package org.firstinspires.ftc.teamcode.Auto.RandomTests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.NonRunnable.DrivePath;
+import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.TelemetryFunctions.showReady;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode.STRAFE_RIGHT;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode.STRAFE_RIGHT;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
 
 @Autonomous
 public class StrafeRight extends LinearOpMode

@@ -2,15 +2,15 @@ package org.firstinspires.ftc.teamcode.NonRunnable.Logic;
 
 import java.util.Arrays;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.DrivePath.getCurrentVelocity;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.BACKWARD_OFFSET;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FORWARD_OFFSET;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.KD_CORRECTION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.KI_CORRECTION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.KP_CORRECTION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.STRAFE_LEFT_OFFSET;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.STRAFE_RIGHT_OFFSET;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath.getCurrentVelocity;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.BACKWARD_OFFSET;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FORWARD_OFFSET;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.KD_CORRECTION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.KI_CORRECTION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.KP_CORRECTION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.STRAFE_LEFT_OFFSET;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.STRAFE_RIGHT_OFFSET;
 
 public final class AngleCorrections
 {

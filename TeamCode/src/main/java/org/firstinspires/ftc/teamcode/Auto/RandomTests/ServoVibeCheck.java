@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto;
+package org.firstinspires.ftc.teamcode.Auto.RandomTests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -7,8 +7,8 @@ import static org.firstinspires.ftc.robotcontroller.external.samples.ConceptScan
 import static org.firstinspires.ftc.robotcontroller.external.samples.ConceptScanServo.INCREMENT;
 import static org.firstinspires.ftc.robotcontroller.external.samples.ConceptScanServo.MAX_POS;
 import static org.firstinspires.ftc.robotcontroller.external.samples.ConceptScanServo.MIN_POS;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flap;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flap;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
 
 @Autonomous
 public class ServoVibeCheck extends LinearOpMode

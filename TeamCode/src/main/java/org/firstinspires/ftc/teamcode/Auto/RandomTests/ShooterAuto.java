@@ -1,13 +1,13 @@
-package org.firstinspires.ftc.teamcode.Auto;
+package org.firstinspires.ftc.teamcode.Auto.RandomTests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flyWheel;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.guide;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.spinner;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.MAX_COUNTS_PER_SECOND;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.MAX_COUNTS_PER_SECOND;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.guide;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.spinner;
 
 @Autonomous
 public class ShooterAuto extends LinearOpMode

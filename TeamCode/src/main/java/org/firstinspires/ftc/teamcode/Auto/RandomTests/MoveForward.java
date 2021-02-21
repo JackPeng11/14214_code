@@ -1,12 +1,12 @@
-package org.firstinspires.ftc.teamcode.Auto;
+package org.firstinspires.ftc.teamcode.Auto.RandomTests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.NonRunnable.DrivePath;
+import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
 
 @Autonomous
 public class MoveForward extends LinearOpMode

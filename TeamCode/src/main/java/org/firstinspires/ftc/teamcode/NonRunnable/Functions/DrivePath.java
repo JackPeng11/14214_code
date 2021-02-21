@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.NonRunnable;
+package org.firstinspires.ftc.teamcode.NonRunnable.Functions;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,13 +13,13 @@ import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveM
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.stopDrivingRobot;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.getAngle;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.resetAngle;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.COUNTS_PER_INCH;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FINAL_SLOW;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FINAL_SLOW_VELOCITY;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.INITIAL_SLOW;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.INITIAL_SLOW_VELOCITY;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.BL;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.COUNTS_PER_INCH;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FINAL_SLOW;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FINAL_SLOW_VELOCITY;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.INITIAL_SLOW;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.INITIAL_SLOW_VELOCITY;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.BL;
 
 public class DrivePath
 {

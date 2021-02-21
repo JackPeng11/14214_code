@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.NonRunnable.DrivePath;
+import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.phoneCam;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.phoneCam;
 
 public final class NoRingsBehavior
 {

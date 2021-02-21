@@ -4,11 +4,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants;
+import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants;
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveMotorsVelocity;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.imu;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.imu;
 
 public final class ImuFunctions
 {
@@ -44,11 +44,11 @@ public final class ImuFunctions
     
     public static void correctToHeading(double heading)
     {
-        setDriveDirection(NvyusRobotConstants.DriveMode.ROTATE_CCW);
+        setDriveDirection(Constants.DriveMode.ROTATE_CCW);
         updateAngleError(heading);
-        while (Math.abs(angleError) > 0.1)
+        while (Math.abs(angleError) > 0.2)
         {
-            setDriveMotorsVelocity(0.11 * direction);
+            setDriveMotorsVelocity(0.1 * direction);
             updateAngleError(heading);
         }
         setDriveMotorsVelocity(0);

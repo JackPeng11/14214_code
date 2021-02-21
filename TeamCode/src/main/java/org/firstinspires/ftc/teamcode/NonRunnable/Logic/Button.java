@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.NonRunnable;
+package org.firstinspires.ftc.teamcode.NonRunnable.Logic;
 
 public class Button
 {

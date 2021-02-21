@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto;
+package org.firstinspires.ftc.teamcode.Auto.RandomTests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -6,11 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.IntakeFunctions.preventRingsFromPassing;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.IntakeFunctions.shoot;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.TelemetryFunctions.showReady;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.MAX_COUNTS_PER_SECOND;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flyWheel;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.spinner;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.tubeIntake;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.MAX_COUNTS_PER_SECOND;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.spinner;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.tubeIntake;
 
 @Autonomous
 public class IntakeTest extends LinearOpMode

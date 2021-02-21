@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.NonRunnable.Functions;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_ARM_COUNTS_PER_DEG;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.wobbleArm;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_ARM_COUNTS_PER_DEG;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.wobbleArm;
 
 public final class WobbleArmFunctions
 {

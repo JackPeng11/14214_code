@@ -7,8 +7,8 @@ import org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminat
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.OneRingBehavior.doOneRingBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.position;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.activateOpenCvCamera;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.activateOpenCvCamera;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
 
 @Autonomous
 public class FinalAuto extends LinearOpMode

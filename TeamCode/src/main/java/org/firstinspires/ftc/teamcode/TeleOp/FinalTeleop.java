@@ -1,30 +1,30 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TeleOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.NonRunnable.Button;
+import org.firstinspires.ftc.teamcode.NonRunnable.Logic.Button;
 
 import java.util.Arrays;
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveMotorsVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.TelemetryFunctions.showReady;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FLAP_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.FLAP_OPEN_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.GUIDE_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.GUIDE_OPEN_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_OPEN_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flap;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.flyWheel;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.guide;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.spinner;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.tubeIntake;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.wobble;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.wobbleArm;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GUIDE_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GUIDE_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flap;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.guide;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.spinner;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.tubeIntake;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.wobble;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.wobbleArm;
 
 @TeleOp
 public final class FinalTeleop extends LinearOpMode
@@ -50,6 +50,7 @@ public final class FinalTeleop extends LinearOpMode
     boolean thirdPartDone;
     
     int toggleRingFlowCount = 0;
+    private boolean currentWobblePos = false;
     
     @Override
     public void runOpMode()
@@ -194,7 +195,7 @@ public final class FinalTeleop extends LinearOpMode
     {
         if (toggleWobbleServo.isPressed(gamepad2.left_stick_button))
         {
-            if (wobble.getPosition() == WOBBLE_CLOSED_POSITION)
+            if (currentWobblePos)
             {
                 wobble.setPosition(WOBBLE_OPEN_POSITION);
             }
@@ -202,6 +203,7 @@ public final class FinalTeleop extends LinearOpMode
             {
                 wobble.setPosition(WOBBLE_CLOSED_POSITION);
             }
+            currentWobblePos = !currentWobblePos;
             sleep(0);
             idle();
         }

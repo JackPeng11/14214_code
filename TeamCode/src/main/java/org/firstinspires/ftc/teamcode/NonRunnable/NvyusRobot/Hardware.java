@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.NonRunnable;
+package org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -20,12 +20,13 @@ import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_ARM_COUNTS_PER_REV;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.WOBBLE_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_ARM_COUNTS_PER_REV;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_OPEN_POSITION;
+
 //Hello
-public final class NvyusRobotHardware
+public final class Hardware
 {
     public static DcMotorEx FL;
     public static DcMotorEx FR;
@@ -35,9 +36,9 @@ public final class NvyusRobotHardware
     public static DcMotorEx spinner;
     public static DcMotorEx flyWheel;
     
-    public static DcMotorEx[] driveMotorsArray = new DcMotorEx[] {FL, FR, BL, BR};
+    public static DcMotorEx[] driveMotorsArray = new DcMotorEx[]{FL, FR, BL, BR};
     
-    public static DcMotor tubeIntake;
+    public static DcMotor   tubeIntake;
     public static DcMotorEx wobbleArm;
     
     public static Servo guide;
@@ -49,14 +50,14 @@ public final class NvyusRobotHardware
     public static OpenCvInternalCamera      phoneCam;
     public static RingDeterminationPipeline pipeline;
     
-    private NvyusRobotHardware()
+    private Hardware()
     {
     }
     
     public static void initHardware(LinearOpMode opMode)
     {
         List<LynxModule> allHubs = opMode.hardwareMap.getAll(LynxModule.class);
-
+    
         for (LynxModule module : allHubs)
         {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
@@ -68,12 +69,12 @@ public final class NvyusRobotHardware
         BR = opMode.hardwareMap.get(DcMotorEx.class, "BR");
         
         driveMotorsArray = new DcMotorEx[]{FL, FR, BL, BR};
-        
-        spinner  = opMode.hardwareMap.get(DcMotorEx.class, "spinner");
+    
+        spinner = opMode.hardwareMap.get(DcMotorEx.class, "spinner");
         flyWheel = opMode.hardwareMap.get(DcMotorEx.class, "speedy");
-        
+    
         tubeIntake = opMode.hardwareMap.get(DcMotor.class, "tubes");
-        wobbleArm  = opMode.hardwareMap.get(DcMotorEx.class, "arm");
+        wobbleArm = opMode.hardwareMap.get(DcMotorEx.class, "arm");
         
         tubeIntake.setDirection(FORWARD);
         spinner.setDirection(REVERSE);
@@ -88,21 +89,21 @@ public final class NvyusRobotHardware
         wobbleArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         spinner.setZeroPowerBehavior(FLOAT);
         tubeIntake.setZeroPowerBehavior(FLOAT);
-        
+    
         //changed flywheel PID from default for better shooting
         //flyWheel.setVelocityPIDFCoefficients(50, 0, 50, 15);
-        
-        guide  = opMode.hardwareMap.get(Servo.class, "guide");
+    
+        guide = opMode.hardwareMap.get(Servo.class, "guide");
         wobble = opMode.hardwareMap.get(Servo.class, "wobble");
-        flap   = opMode.hardwareMap.get(Servo.class, "flap");
-        
+        flap = opMode.hardwareMap.get(Servo.class, "flap");
+    
         //Initialize IMU
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
-        parameters.calibrationDataFile  = "BNO055IMUCalibration.json";
-        parameters.loggingEnabled       = true;
-        parameters.loggingTag           = "IMU";
-        imu                             = opMode.hardwareMap.get(BNO055IMU.class, "imu");
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        imu = opMode.hardwareMap.get(BNO055IMU.class, "imu");
         imu.write8(BNO055IMU.Register.OPR_MODE, 0b00000011);
         imu.initialize(parameters);
     }
