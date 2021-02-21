@@ -42,8 +42,6 @@ public class DrivePath
         this.inchesError = targetDistance;
         this.distanceTraveled = 0;
         cycles = 0;
-        
-        setDriveDirection(this.driveMode);
     }
     
     public static double getCurrentVelocity()
@@ -87,6 +85,7 @@ public class DrivePath
     
     private void prepareForStart()
     {
+        setDriveDirection(this.driveMode);
         resetAngle();
         resetDriveEncoders();
         runTime.reset();

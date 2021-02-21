@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.NonRunnable.DrivePath;
 
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotConstants.DriveMode;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.phoneCam;
 
@@ -16,8 +17,11 @@ public final class OneRingBehavior
     public static void doOneRingBehavior(LinearOpMode opMode)
     {
         phoneCam.closeCameraDevice();
-        DrivePath strafeRightAtBeginning = new DrivePath(0.4, 16, DriveMode.STRAFE_RIGHT, opMode);
         DrivePath advanceToShootingLine = new DrivePath(0.4, 69, DriveMode.FORWARD, opMode);
+        DrivePath strafeRightAtBeginning = new DrivePath(0.4, 16, DriveMode.STRAFE_RIGHT, opMode);
         strafeRightAtBeginning.go();
+        correctToHeading(0);
+        advanceToShootingLine.go();
+        
     }
 }
