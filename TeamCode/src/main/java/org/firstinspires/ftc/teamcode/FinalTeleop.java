@@ -61,6 +61,7 @@ public final class FinalTeleop extends LinearOpMode
         
         while (opModeIsActive())
         {
+            telemetry.addData("PID coefficients", flyWheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
             drive();
             controlRingFlow();
             controlIntake();
@@ -138,7 +139,7 @@ public final class FinalTeleop extends LinearOpMode
             }
             else
             {
-                setVelocity(flyWheel, 0.075);
+                setVelocity(flyWheel, 0.14);
             }
             ++toggleRingFlowCount;
             

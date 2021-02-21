@@ -90,7 +90,7 @@ public final class NvyusRobotHardware
         tubeIntake.setZeroPowerBehavior(FLOAT);
         
         //changed flywheel PID from default for better shooting
-        flyWheel.setVelocityPIDFCoefficients(100, 0, 0, 15);
+        //flyWheel.setVelocityPIDFCoefficients(50, 0, 50, 15);
         
         guide  = opMode.hardwareMap.get(Servo.class, "guide");
         wobble = opMode.hardwareMap.get(Servo.class, "wobble");
