@@ -3,10 +3,6 @@ package org.firstinspires.ftc.teamcode.Auto;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.FourRingsBehavior.doFourRingsBehavior;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.NoRingsBehavior.doNoRingsBehavior;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.OneRingBehavior.doOneRingBehavior;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.RingPosition;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.position;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.activateOpenCvCamera;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobotHardware.initHardware;
@@ -25,18 +21,24 @@ public class FinalAuto extends LinearOpMode
         
         waitForStart();
         
-        if (position == RingPosition.FOUR)
+        telemetry.addData("rings found:", position);
+        telemetry.update();
+        while (opModeIsActive())
         {
-            doFourRingsBehavior(FinalAuto.this);
+        
         }
-        else if (position == RingPosition.ONE)
-        {
-            doOneRingBehavior(FinalAuto.this);
-        }
-        else
-        {
-            doNoRingsBehavior(FinalAuto.this);
-        }
+//        if (position == RingPosition.FOUR)
+//        {
+//            doFourRingsBehavior(FinalAuto.this);
+//        }
+//        else if (position == RingPosition.ONE)
+//        {
+//            doOneRingBehavior(FinalAuto.this);
+//        }
+//        else
+//        {
+//            doNoRingsBehavior(FinalAuto.this);
+//        }
     }
 }
 

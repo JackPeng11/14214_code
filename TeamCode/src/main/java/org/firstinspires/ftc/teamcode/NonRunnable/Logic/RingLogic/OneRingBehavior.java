@@ -16,7 +16,7 @@ public final class OneRingBehavior
     public static void doOneRingBehavior(LinearOpMode opMode)
     {
         phoneCam.closeCameraDevice();
-        DrivePath strafeRightAtBeginning = new DrivePath(0.4, 16, DriveMode.FORWARD, opMode);
+        DrivePath strafeRightAtBeginning = new DrivePath(0.4, 16, DriveMode.STRAFE_RIGHT, opMode);
         DrivePath advanceToShootingLine = new DrivePath(0.4, 69, DriveMode.FORWARD, opMode);
         strafeRightAtBeginning.go();
     }
