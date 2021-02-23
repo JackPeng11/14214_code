@@ -67,7 +67,7 @@ public class DrivePath
         double[]         finalDriveVelocities;
         AngleCorrections correctionArray = new AngleCorrections(this.driveMode);
         
-        while ((this.inchesError > 0.5) && this.opMode.opModeIsActive())
+        while ((this.inchesError > 0.25) && this.opMode.opModeIsActive())
         {
             correctionArray.update(getAngle());
             finalDriveVelocities = getCorrectedVelocities(getInitialDriveVelocities(),
@@ -76,7 +76,7 @@ public class DrivePath
             this.opMode.telemetry.addData("OG", Arrays.toString(getInitialDriveVelocities()));
             this.opMode.telemetry.addData("Corrections", Arrays.toString(correctionArray.getCorrectionArray()));
             this.opMode.telemetry.update();
-            
+    
             setDriveMotorsVelocity(finalDriveVelocities);
             updateValues();
         }
@@ -126,6 +126,6 @@ public class DrivePath
     {
         cycles++;
         this.distanceTraveled = BL.getCurrentPosition() / COUNTS_PER_INCH;
-        this.inchesError = Math.abs(this.distanceTraveled - this.targetDistance);
+        this.inchesError = this.targetDistance - this.distanceTraveled;
     }
 }

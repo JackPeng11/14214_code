@@ -136,11 +136,11 @@ public final class FinalTeleop extends LinearOpMode
         {
             if (gamepad2.left_trigger > 0.5)
             {
-               setVelocity(flyWheel, 0.1469);
+               setVelocity(flyWheel, 0.15);
             }
             else
             {
-                setVelocity(flyWheel, 0.14);
+                setVelocity(flyWheel, 0.3);
             }
             ++toggleRingFlowCount;
             
@@ -181,7 +181,7 @@ public final class FinalTeleop extends LinearOpMode
         }
         else
         {
-            setVelocity(flyWheel, 0.05);
+            setVelocity(flyWheel, 0.1);
             guide.setPosition(GUIDE_OPEN_POSITION);
             sleep(0);
             idle();
