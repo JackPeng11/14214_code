@@ -54,18 +54,6 @@ public final class ImuFunctions
         setDriveMotorsVelocity(0);
     }
     
-    public static void turn(double heading)
-    {
-        setDriveDirection(Constants.DriveMode.ROTATE_CCW);
-        updateAngleError(heading);
-        while (angleError > 0.5)
-        {
-            setDriveMotorsVelocity(0.3 * direction);
-            updateAngleError(heading);
-        }
-        setDriveMotorsVelocity(0);
-    }
-    
     public static void updateAngleError(double heading)
     {
         angleError = heading - getAngle();
@@ -89,10 +77,33 @@ public final class ImuFunctions
         {
             deltaAngle -= 360;
         }
-        
+    
         globalAngle += deltaAngle;
         lastAngles = angles;
-        
+    
         return globalAngle;
+    }
+    
+    public static void turn(double heading)
+    {
+        setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+        updateAngleError(heading);
+        if (heading >= 0)
+        {
+            while (angleError > 0.5)
+            {
+                setDriveMotorsVelocity(0.2 * direction);
+                updateAngleError(heading);
+            }
+        }
+        else
+        {
+            while (angleError < -0.5)
+            {
+                setDriveMotorsVelocity(0.2 * direction);
+                updateAngleError(heading);
+            }
+        }
+        setDriveMotorsVelocity(0);
     }
 }

@@ -10,13 +10,14 @@ import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.IntakeFunctions.shoot;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.gripWobbleGoal;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.NoRingsBehavior.doNoRingsBehavior;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.OneRingBehavior.doOneRingBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.position;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.activateOpenCvCamera;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.phoneCam;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.wobble;
 
 @Autonomous
 public class FinalAuto extends LinearOpMode
@@ -33,15 +34,16 @@ public class FinalAuto extends LinearOpMode
         waitForStart();
     
         phoneCam.closeCameraDevice();
-        DrivePath advanceToShootingLine  = new DrivePath(0.4, 58.5, Constants.DriveMode.FORWARD, this);
         DrivePath strafeRightAtBeginning = new DrivePath(0.4, 19, Constants.DriveMode.STRAFE_RIGHT, this);
+        DrivePath advanceToShootingLine  = new DrivePath(0.4, 59.5, Constants.DriveMode.FORWARD, this);
         DrivePath strafeToAim            = new DrivePath(0.4, 19, Constants.DriveMode.STRAFE_LEFT, this);
     
-        wobble.setPosition(WOBBLE_CLOSED_POSITION);
+        gripWobbleGoal(this);
         strafeRightAtBeginning.go();
-        setVelocity(flyWheel, 0.17); //13V: 0.22, 11V: 0.24
+        setVelocity(flyWheel, 0.17); // >=12V: 0.17 <=11V: 0.19
         correctToHeading(0);
         advanceToShootingLine.go();
+        correctToHeading(0);
         //        turn(7.5);
         strafeToAim.go();
         correctToHeading(0);
@@ -53,11 +55,11 @@ public class FinalAuto extends LinearOpMode
         }
         else if (position == RingDeterminationPipeline.RingPosition.ONE)
         {
-            //doOneRingBehavior(this);
+            doOneRingBehavior(this);
         }
         else
         {
-            //doNoRingsBehavior(this);
+            doNoRingsBehavior(this);
         }
     
         telemetry.addData("rings found:", position);

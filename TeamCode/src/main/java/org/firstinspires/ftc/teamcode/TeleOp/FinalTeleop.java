@@ -140,7 +140,7 @@ public final class FinalTeleop extends LinearOpMode
             }
             else
             {
-                setVelocity(flyWheel, 0.3);
+                setVelocity(flyWheel, 0.17);
             }
             ++toggleRingFlowCount;
             
@@ -250,7 +250,10 @@ public final class FinalTeleop extends LinearOpMode
             {
                 teleopVelocityArray[i] /= maxSpeed;
             }
-            
+    
+            teleopVelocityArray[i] /= Math.abs(teleopVelocityArray[i]);
+            teleopVelocityArray[i] *= 0.7;
+    
             if (slowMode)
             {
                 teleopVelocityArray[i] /= Math.abs(teleopVelocityArray[i]);
