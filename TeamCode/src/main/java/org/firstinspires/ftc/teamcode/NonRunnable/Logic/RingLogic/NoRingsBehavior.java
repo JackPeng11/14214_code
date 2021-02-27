@@ -17,13 +17,15 @@ public final class NoRingsBehavior
     
     public static void doNoRingsBehavior(LinearOpMode opMode)
     {
-        DrivePath moveForwardOntoLaunchLine = new DrivePath(0.3, 12, DriveMode.FORWARD, opMode);
+        DrivePath moveForwardOntoLaunchLine = new DrivePath(0.3, 20, DriveMode.FORWARD, opMode);
         DrivePath strafeIntoZone            = new DrivePath(0.3, 8, DriveMode.STRAFE_LEFT, opMode);
+        DrivePath releaseByMovingBack       = new DrivePath(0.3, 4, DriveMode.BACKWARD, opMode);
     
         moveForwardOntoLaunchLine.go();
         strafeIntoZone.go();
         moveWobbleArmDown(opMode);
         releaseWobbleGoal(opMode);
+        releaseByMovingBack.go();
         moveWobbleArmUp(opMode);
     }
 }

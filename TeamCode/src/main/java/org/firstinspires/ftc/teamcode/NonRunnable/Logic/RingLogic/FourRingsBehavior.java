@@ -5,7 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
 import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants;
 
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.phoneCam;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.turn;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.moveWobbleArmDown;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.moveWobbleArmUp;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.releaseWobbleGoal;
 
 public final class FourRingsBehavior
 {
@@ -15,8 +18,18 @@ public final class FourRingsBehavior
     
     public static void doFourRingsBehavior(LinearOpMode opMode)
     {
-        phoneCam.closeCameraDevice();
-        DrivePath moveForward = new DrivePath(0.3, 4, Constants.DriveMode.FORWARD, opMode);
-        moveForward.go();
+        DrivePath moveForwardTowardsZone = new DrivePath(0.3, 56, Constants.DriveMode.FORWARD, opMode);
+        DrivePath strafeIntoZone         = new DrivePath(0.3, 8, Constants.DriveMode.STRAFE_LEFT, opMode);
+        DrivePath goBackToLaunchLine     = new DrivePath(0.3, 40, Constants.DriveMode.BACKWARD, opMode);
+        DrivePath releaseByMovingBack    = new DrivePath(0.3, 4, Constants.DriveMode.BACKWARD, opMode);
+    
+        moveForwardTowardsZone.go();
+        strafeIntoZone.go();
+        moveWobbleArmDown(opMode);
+        releaseWobbleGoal(opMode);
+        releaseByMovingBack.go();
+        moveWobbleArmUp(opMode);
+        goBackToLaunchLine.go();
+        turn(180);
     }
 }

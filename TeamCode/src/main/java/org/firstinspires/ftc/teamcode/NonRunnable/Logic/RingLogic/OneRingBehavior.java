@@ -18,13 +18,17 @@ public final class OneRingBehavior
     
     public static void doOneRingBehavior(LinearOpMode opMode)
     {
-        DrivePath strafeToWobbleZone = new DrivePath(0.4, 16, DriveMode.STRAFE_LEFT, opMode);
+        DrivePath strafeToWobbleZone     = new DrivePath(0.4, 16, DriveMode.STRAFE_LEFT, opMode);
+        DrivePath strafeBackToLaunchLine = new DrivePath(0.4, 5, DriveMode.STRAFE_RIGHT, opMode);
+        DrivePath releaseByMovingBack    = new DrivePath(0.3, 4, DriveMode.BACKWARD, opMode);
     
         turn(-90);
         strafeToWobbleZone.go();
         moveWobbleArmDown(opMode);
         releaseWobbleGoal(opMode);
+        releaseByMovingBack.go();
         moveWobbleArmUp(opMode);
-    
+        strafeBackToLaunchLine.go();
+        turn(-90);
     }
 }

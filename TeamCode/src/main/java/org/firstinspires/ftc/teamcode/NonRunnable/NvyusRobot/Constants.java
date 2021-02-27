@@ -38,7 +38,7 @@ public final class Constants
     public static final double FORWARD_OFFSET      = 0;
     public static final double BACKWARD_OFFSET     = 0;
     public static final double STRAFE_LEFT_OFFSET  = 0;
-    public static final double STRAFE_RIGHT_OFFSET = 0.14;
+    public static final double STRAFE_RIGHT_OFFSET = 0;
     
     public enum DriveMode
     {

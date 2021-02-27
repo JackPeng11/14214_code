@@ -18,7 +18,7 @@ public class StrafeRight extends LinearOpMode
     {
         initHardware(this);
         
-        DrivePath path = new DrivePath(0.9, 72, STRAFE_RIGHT, StrafeRight.this);
+        DrivePath path = new DrivePath(0.5, 110, STRAFE_RIGHT, StrafeRight.this);
         showReady(StrafeRight.this);
         waitForStart();
         

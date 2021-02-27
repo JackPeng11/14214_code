@@ -51,7 +51,7 @@ public final class WobbleArmFunctions
         wobbleArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wobbleArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         
-        while ((wobbleArm.getCurrentPosition() <= wobbleArmDegreesToCounts(182)) && opMode.opModeIsActive())
+        while ((wobbleArm.getCurrentPosition() <= wobbleArmDegreesToCounts(183)) && opMode.opModeIsActive())
         {
             setVelocity(wobbleArm, 0.4);
         }
@@ -62,8 +62,8 @@ public final class WobbleArmFunctions
     {
         wobbleArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wobbleArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        
-        while ((wobbleArm.getCurrentPosition() >= wobbleArmDegreesToCounts(-182)) && opMode.opModeIsActive())
+    
+        while ((wobbleArm.getCurrentPosition() >= wobbleArmDegreesToCounts(-183)) && opMode.opModeIsActive())
         {
             setVelocity(wobbleArm, -0.4);
         }

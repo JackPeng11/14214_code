@@ -40,7 +40,6 @@ public final class FinalTeleop extends LinearOpMode
     Button toggleSlowMode     = new Button();
     Button toggleRingFlow     = new Button();
     Button toggleWobbleServo  = new Button();
-    Button zeroWobblePosition = new Button();
     
     boolean wobbleArmCalibrated = false;
     boolean slowMode            = false;
@@ -136,7 +135,7 @@ public final class FinalTeleop extends LinearOpMode
         {
             if (gamepad2.left_trigger > 0.5)
             {
-               setVelocity(flyWheel, 0.15);
+                setVelocity(flyWheel, 0.15);
             }
             else
             {
@@ -208,16 +207,6 @@ public final class FinalTeleop extends LinearOpMode
             idle();
         }
         
-        if (zeroWobblePosition.isPressed(gamepad2.right_stick_button))
-        {
-            if (!wobbleArmCalibrated)
-            {
-                wobbleArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                zeroWobblePosition.isFinished();
-                wobbleArmCalibrated = true;
-            }
-        }
-        
         if (gamepad2.right_stick_y < -0.3)
         {
             setVelocity(wobbleArm, -0.25);
@@ -252,7 +241,7 @@ public final class FinalTeleop extends LinearOpMode
             }
     
             teleopVelocityArray[i] /= Math.abs(teleopVelocityArray[i]);
-            teleopVelocityArray[i] *= 0.7;
+            teleopVelocityArray[i] *= 0.9;
     
             if (slowMode)
             {

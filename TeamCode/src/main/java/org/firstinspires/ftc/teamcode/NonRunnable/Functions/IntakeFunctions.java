@@ -62,7 +62,6 @@ public final class IntakeFunctions
         guide.setPosition(GUIDE_CLOSED_POSITION);
         opMode.sleep(300);
         opMode.idle();
-        
         setVelocity(spinner, 0.64);
         
         opMode.sleep(sleep);

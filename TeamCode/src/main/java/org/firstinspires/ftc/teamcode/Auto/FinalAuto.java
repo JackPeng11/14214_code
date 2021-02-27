@@ -11,6 +11,7 @@ import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveM
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.IntakeFunctions.shoot;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.gripWobbleGoal;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.FourRingsBehavior.doFourRingsBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.NoRingsBehavior.doNoRingsBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.OneRingBehavior.doOneRingBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.position;
@@ -33,25 +34,25 @@ public class FinalAuto extends LinearOpMode
     
         waitForStart();
     
-        phoneCam.closeCameraDevice();
         DrivePath strafeRightAtBeginning = new DrivePath(0.4, 19, Constants.DriveMode.STRAFE_RIGHT, this);
-        DrivePath advanceToShootingLine  = new DrivePath(0.4, 59.5, Constants.DriveMode.FORWARD, this);
-        DrivePath strafeToAim            = new DrivePath(0.4, 19, Constants.DriveMode.STRAFE_LEFT, this);
+        DrivePath advanceToShootingLine  = new DrivePath(0.4, 62, Constants.DriveMode.FORWARD, this);
+        DrivePath strafeToAim            = new DrivePath(0.4, 25, Constants.DriveMode.STRAFE_LEFT, this);
     
+        phoneCam.closeCameraDevice();
         gripWobbleGoal(this);
         strafeRightAtBeginning.go();
-        setVelocity(flyWheel, 0.17); // >=12V: 0.17 <=11V: 0.19
         correctToHeading(0);
         advanceToShootingLine.go();
         correctToHeading(0);
         //        turn(7.5);
+        setVelocity(flyWheel, 0.17); // >=12V: 0.17 <=11V: 0.19
         strafeToAim.go();
         correctToHeading(0);
         shoot(this, 1800);
     
         if (position == RingDeterminationPipeline.RingPosition.FOUR)
         {
-            //doFourRingsBehavior(this);
+            doFourRingsBehavior(this);
         }
         else if (position == RingDeterminationPipeline.RingPosition.ONE)
         {
