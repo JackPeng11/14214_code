@@ -17,6 +17,7 @@ import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GU
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GUIDE_OPEN_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_OPEN_POSITION;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.highGoalSpeed;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flap;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.guide;
@@ -47,6 +48,7 @@ public final class FinalTeleop extends LinearOpMode
     boolean firstPartDone;
     boolean secondPartDone;
     boolean thirdPartDone;
+    //random change
     
     int toggleRingFlowCount = 0;
     private boolean currentWobblePos = false;
@@ -139,7 +141,7 @@ public final class FinalTeleop extends LinearOpMode
             }
             else
             {
-                setVelocity(flyWheel, 0.17);
+                setVelocity(flyWheel, highGoalSpeed);
             }
             ++toggleRingFlowCount;
             
@@ -175,7 +177,7 @@ public final class FinalTeleop extends LinearOpMode
             
             if (gamepad2.left_bumper)
             {
-                setVelocity(spinner, 0.64);
+                setVelocity(spinner, 0.4);
             }
         }
         else

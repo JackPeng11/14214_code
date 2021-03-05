@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot;
 
 public final class Constants
 {
+    public static final double highGoalSpeed        = 0.2;
     public static final double WOBBLE_OPEN_POSITION = 0.5;
     
     //Encoder counts
@@ -14,7 +15,7 @@ public final class Constants
     //Open means not in contact with anything, closed means touching
     public static final double FLAP_OPEN_POSITION     = 1;
     public static final double FLAP_CLOSED_POSITION   = 0.7;
-    public static final double WOBBLE_CLOSED_POSITION = 0.91;
+    public static final double WOBBLE_CLOSED_POSITION = 1;
     
     //restrict instantiation
     private Constants()
