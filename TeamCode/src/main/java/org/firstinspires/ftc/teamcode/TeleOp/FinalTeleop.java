@@ -2,14 +2,17 @@ package org.firstinspires.ftc.teamcode.TeleOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.NonRunnable.Logic.Button;
+import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants;
 
 import java.util.Arrays;
 
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveMotorsVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setVelocity;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.getAngle;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.resetAngle;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.TelemetryFunctions.showReady;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_CLOSED_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.FLAP_OPEN_POSITION;
@@ -18,6 +21,7 @@ import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.GU
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_OPEN_POSITION;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.highGoalSpeed;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.powerShotSpeed;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flap;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.guide;
@@ -38,20 +42,24 @@ public final class FinalTeleop extends LinearOpMode
     
     double[] teleopVelocityArray = new double[4];
     
-    Button toggleSlowMode     = new Button();
-    Button toggleRingFlow     = new Button();
-    Button toggleWobbleServo  = new Button();
+    Button toggleSlowMode    = new Button();
+    Button toggleRingFlow    = new Button();
+    Button toggleWobbleServo = new Button();
+    Button zeroAngle         = new Button();
+    Button powerShotToggle   = new Button();
     
-    boolean wobbleArmCalibrated = false;
-    boolean slowMode            = false;
+    boolean slowMode = false;
     
     boolean firstPartDone;
     boolean secondPartDone;
     boolean thirdPartDone;
-    //random change
     
     int toggleRingFlowCount = 0;
     private boolean currentWobblePos = false;
+    private boolean leftPosReached   = true;
+    private boolean centerPosReached = true;
+    private boolean rightPosReached  = true;
+    private boolean powershot        = false;
     
     @Override
     public void runOpMode()
@@ -63,15 +71,17 @@ public final class FinalTeleop extends LinearOpMode
         
         while (opModeIsActive())
         {
-            telemetry.addData("PID coefficients", flyWheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+            telemetry.addData("slowmode", slowMode);
+            telemetry.addData("powershot speed", powershot);
+            telemetry.addData("angle", getAngle());
+            telemetry.update();
+            //-8 right, 0 middle, 5 left
             drive();
-            controlRingFlow();
             controlIntake();
             controlShooter();
             controlWobbleArm();
-            
-            telemetry.addData("Wobble Arm Calibrated:", wobbleArmCalibrated);
-            telemetry.update();
+            powerShot();
+            setZeroAngle();
         }
     }
     
@@ -79,65 +89,44 @@ public final class FinalTeleop extends LinearOpMode
     {
         forwardComponent = -gamepad1.left_stick_y;
         strafeComponent = gamepad1.left_stick_x;
-        rotationComponent = gamepad1.right_stick_x;
+        rotationComponent = 0.7 * gamepad1.right_stick_x;
         
         teleopVelocityArray[0] = forwardComponent + strafeComponent + rotationComponent;
         teleopVelocityArray[1] = forwardComponent - strafeComponent - rotationComponent;
         teleopVelocityArray[2] = forwardComponent - strafeComponent + rotationComponent;
         teleopVelocityArray[3] = forwardComponent + strafeComponent - rotationComponent;
-        
+    
         normalizeVelocities();
-        
+    
         if (toggleSlowMode.isPressed(gamepad1.y))
         {
             slowMode = !slowMode;
         }
-        setDriveMotorsVelocity(teleopVelocityArray);
-    }
-    
-    private void controlRingFlow()
-    {
-    }
-    
-    private void controlIntake()
-    {
-        if (gamepad2.left_bumper)
+        if (forwardComponent == 0 && strafeComponent == 0 && rotationComponent == 0)
         {
-            if (gamepad2.dpad_down)
+            if (!(gamepad1.dpad_left || gamepad1.dpad_up || gamepad1.dpad_right))
             {
-                tubeIntake.setPower(-1);
-            }
-            else
-            {
-                tubeIntake.setPower(1);
+                setDriveMotorsVelocity(0);
             }
         }
         else
         {
-            tubeIntake.setPower(0);
-        }
-        
-        if (gamepad2.dpad_up)
-        {
-            setVelocity(spinner, 0.2);
-        }
-        else if (gamepad2.dpad_down)
-        {
-            setVelocity(spinner, -0.4);
-        }
-        else if (!((gamepad2.right_trigger > 0.5) && gamepad2.left_bumper))
-        {
-            setVelocity(spinner, 0);
+            setDriveMotorsVelocity(teleopVelocityArray);
         }
     }
     
     private void controlShooter()
     {
+        if (powerShotToggle.isPressed(gamepad2.x))
+        {
+            powershot = !powershot;
+        }
+        
         if (gamepad2.right_trigger > 0.5)
         {
-            if (gamepad2.left_trigger > 0.5)
+            if (powershot)
             {
-                setVelocity(flyWheel, 0.15);
+                setVelocity(flyWheel, powerShotSpeed);
             }
             else
             {
@@ -182,14 +171,112 @@ public final class FinalTeleop extends LinearOpMode
         }
         else
         {
-            setVelocity(flyWheel, 0.1);
+            setVelocity(flyWheel, 0);
             guide.setPosition(GUIDE_OPEN_POSITION);
             sleep(0);
             idle();
             toggleRingFlow.isFinished();
             toggleRingFlowCount = 0;
         }
+    }
+    
+    private void powerShot()
+    {
+        double angleError;
+        int    direction;
+        if (gamepad1.dpad_left || !leftPosReached)
+        {
+            setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+            setDriveMotorsVelocity(0.4);
+            sleep(158);
+            setDriveMotorsVelocity(0);
+            
+            //            angleError = 5 - getAngle();
+            //            direction = (int) (angleError / Math.abs(angleError));
+            //            if (angleError > 2)
+            //            {
+            //                setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+            //                setDriveMotorsVelocity(0.14 * direction);
+            //            }
+            //            else
+            //            {
+            //                leftPosReached = true;
+            //            }
+        }
+        else if (gamepad1.dpad_up || !centerPosReached)
+        {
+            angleError = 0 - getAngle();
+            direction = (int) (angleError / Math.abs(angleError));
+            if (angleError > 2)
+            {
+                setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+                setDriveMotorsVelocity(0.14 * direction);
+            }
+            else
+            {
+                centerPosReached = true;
+            }
+        }
+        else if (gamepad1.dpad_right || !rightPosReached)
+        {
+            setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+            setDriveMotorsVelocity(-0.4);
+            sleep(158);
+            setDriveMotorsVelocity(0);
+            
+            //            angleError = -5 - getAngle();
+            //            direction = (int) (angleError / Math.abs(angleError));
+            //            if (angleError < -2)
+            //            {
+            //                setDriveDirection(Constants.DriveMode.ROTATE_CCW);
+            //                setDriveMotorsVelocity(0.14 * direction);
+            //            }
+            //            else
+            //            {
+            //                rightPosReached = true;
+            //            }
+        }
+        setDriveDirection(Constants.DriveMode.FORWARD);
+    }
+    
+    private void controlIntake()
+    {
+        if (gamepad2.left_bumper)
+        {
+            if (gamepad2.dpad_down)
+            {
+                tubeIntake.setPower(-1);
+            }
+            else
+            {
+                tubeIntake.setPower(1);
+            }
+        }
+        else
+        {
+            tubeIntake.setPower(0);
+        }
         
+        if (gamepad2.dpad_up)
+        {
+            setVelocity(spinner, 0.2);
+        }
+        else if (gamepad2.dpad_down)
+        {
+            setVelocity(spinner, -0.4);
+        }
+        else if (!((gamepad2.right_trigger > 0.5) && gamepad2.left_bumper))
+        {
+            setVelocity(spinner, 0);
+        }
+    }
+    
+    private void setZeroAngle()
+    {
+        if (zeroAngle.isPressed(gamepad1.a))
+        {
+            resetAngle();
+        }
     }
     
     public void controlWobbleArm()

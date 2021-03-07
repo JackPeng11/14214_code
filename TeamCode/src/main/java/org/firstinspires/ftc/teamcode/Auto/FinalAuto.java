@@ -4,17 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
-import org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline;
 import org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants;
 
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.IntakeFunctions.shoot;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.gripWobbleGoal;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.FourRingsBehavior.doFourRingsBehavior;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.NoRingsBehavior.doNoRingsBehavior;
-import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.OneRingBehavior.doOneRingBehavior;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Logic.RingLogic.RingDeterminationPipeline.position;
+import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.highGoalSpeed;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.activateOpenCvCamera;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.flyWheel;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Hardware.initHardware;
@@ -44,24 +41,24 @@ public class FinalAuto extends LinearOpMode
         correctToHeading(0);
         advanceToShootingLine.go();
         correctToHeading(0);
-        //        turn(7.5);
-        setVelocity(flyWheel, 0.17); // >=12V: 0.17 <=11V: 0.19
+    
+        setVelocity(flyWheel, highGoalSpeed); // >=12V: 0.17 <=11V: 0.19
         strafeToAim.go();
         correctToHeading(0);
         shoot(this, 1800);
     
-        if (position == RingDeterminationPipeline.RingPosition.FOUR)
-        {
-            doFourRingsBehavior(this);
-        }
-        else if (position == RingDeterminationPipeline.RingPosition.ONE)
-        {
-            doOneRingBehavior(this);
-        }
-        else
-        {
-            doNoRingsBehavior(this);
-        }
+        //        if (position == RingDeterminationPipeline.RingPosition.FOUR)
+        //        {
+        //            doFourRingsBehavior(this);
+        //        }
+        //        else if (position == RingDeterminationPipeline.RingPosition.ONE)
+        //        {
+        //            doOneRingBehavior(this);
+        //        }
+        //        else
+        //        {
+        //            doNoRingsBehavior(this);
+        //        }
     
         telemetry.addData("rings found:", position);
         telemetry.update();

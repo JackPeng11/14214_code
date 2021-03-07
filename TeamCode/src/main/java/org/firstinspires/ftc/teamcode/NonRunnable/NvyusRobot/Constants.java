@@ -2,7 +2,8 @@ package org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot;
 
 public final class Constants
 {
-    public static final double highGoalSpeed        = 0.2;
+    public static final double highGoalSpeed        = 0.75;
+    public static final double powerShotSpeed       = 0.65;
     public static final double WOBBLE_OPEN_POSITION = 0.5;
     
     //Encoder counts
@@ -13,7 +14,7 @@ public final class Constants
     
     //Servo Positions
     //Open means not in contact with anything, closed means touching
-    public static final double FLAP_OPEN_POSITION     = 1;
+    public static final double FLAP_OPEN_POSITION     = 0.97;
     public static final double FLAP_CLOSED_POSITION   = 0.7;
     public static final double WOBBLE_CLOSED_POSITION = 1;
     
@@ -22,7 +23,7 @@ public final class Constants
     {
     }
     
-    public static final double GUIDE_OPEN_POSITION   = 0.99;
+    public static final double GUIDE_OPEN_POSITION   = 0.975;
     public static final double GUIDE_CLOSED_POSITION = 0.87;
     
     //Start and end deceleration distances
