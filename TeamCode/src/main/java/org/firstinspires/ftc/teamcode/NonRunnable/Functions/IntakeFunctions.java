@@ -50,24 +50,15 @@ public final class IntakeFunctions
     
     public static void shoot(LinearOpMode opMode, long sleep)
     {
-        tubeIntake.setPower(1);
-        flap.setPosition(FLAP_CLOSED_POSITION);
-        opMode.sleep(300);
-        opMode.idle();
-        
-        flap.setPosition(FLAP_OPEN_POSITION);
-        opMode.sleep(300);
-        opMode.idle();
-        
         guide.setPosition(GUIDE_CLOSED_POSITION);
         opMode.sleep(300);
         opMode.idle();
-        setVelocity(spinner, 0.64);
+        setVelocity(spinner, 0.19);
         
         opMode.sleep(sleep);
         tubeIntake.setPower(0);
         setVelocity(spinner, 0);
-        setVelocity(flyWheel, 0.1);
+        setVelocity(flyWheel, 0);
         guide.setPosition(GUIDE_OPEN_POSITION);
         opMode.sleep(0);
         opMode.idle();

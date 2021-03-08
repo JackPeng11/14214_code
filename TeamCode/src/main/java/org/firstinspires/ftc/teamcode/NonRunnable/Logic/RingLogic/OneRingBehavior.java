@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.NonRunnable.Functions.DrivePath;
 
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.turn;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.moveWobbleArmDown;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.WobbleArmFunctions.moveWobbleArmUp;
@@ -18,11 +19,12 @@ public final class OneRingBehavior
     
     public static void doOneRingBehavior(LinearOpMode opMode)
     {
-        DrivePath strafeToWobbleZone     = new DrivePath(0.4, 16, DriveMode.STRAFE_LEFT, opMode);
-        DrivePath strafeBackToLaunchLine = new DrivePath(0.4, 5, DriveMode.STRAFE_RIGHT, opMode);
+        DrivePath strafeToWobbleZone     = new DrivePath(0.4, 30, DriveMode.STRAFE_LEFT, opMode);
+        DrivePath strafeBackToLaunchLine = new DrivePath(0.4, 6, DriveMode.STRAFE_RIGHT, opMode);
         DrivePath releaseByMovingBack    = new DrivePath(0.3, 4, DriveMode.BACKWARD, opMode);
     
         turn(-90);
+        correctToHeading(-90);
         strafeToWobbleZone.go();
         moveWobbleArmDown(opMode);
         releaseWobbleGoal(opMode);
@@ -30,5 +32,6 @@ public final class OneRingBehavior
         moveWobbleArmUp(opMode);
         strafeBackToLaunchLine.go();
         turn(-90);
+        correctToHeading(-90);
     }
 }

@@ -46,7 +46,7 @@ public final class ImuFunctions
     {
         setDriveDirection(Constants.DriveMode.ROTATE_CCW);
         updateAngleError(heading);
-        while (Math.abs(angleError) > 0.5)
+        while (Math.abs(angleError) > 0.25)
         {
             setDriveMotorsVelocity(0.2 * direction);
             updateAngleError(heading);
@@ -88,21 +88,10 @@ public final class ImuFunctions
     {
         setDriveDirection(Constants.DriveMode.ROTATE_CCW);
         updateAngleError(heading);
-        if (heading >= 0)
+        while (Math.abs(angleError) > 1)
         {
-            while (angleError > 0.5)
-            {
-                setDriveMotorsVelocity(0.2 * direction);
-                updateAngleError(heading);
-            }
-        }
-        else
-        {
-            while (angleError < -0.5)
-            {
-                setDriveMotorsVelocity(0.2 * direction);
-                updateAngleError(heading);
-            }
+            setDriveMotorsVelocity(0.35 * direction);
+            updateAngleError(heading);
         }
         setDriveMotorsVelocity(0);
     }

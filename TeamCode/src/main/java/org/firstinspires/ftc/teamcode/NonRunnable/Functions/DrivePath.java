@@ -81,6 +81,7 @@ public class DrivePath
             updateValues();
         }
         stopDrivingRobot(this.opMode);
+        opMode.sleep(100);
     }
     
     private void prepareForStart()
