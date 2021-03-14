@@ -35,43 +35,43 @@ public class FinalAuto extends LinearOpMode
     
         waitForStart();
     
-        DrivePath strafeRightAtBeginning = new DrivePath(0.4, 19, Constants.DriveMode.STRAFE_RIGHT, this);
-        DrivePath advanceToShootingLine  = new DrivePath(0.4, 47.5, Constants.DriveMode.FORWARD, this);
-        DrivePath strafeToAim            = new DrivePath(0.4, 22, Constants.DriveMode.STRAFE_LEFT, this);
+        DrivePath strafeRightAtBeginning = new DrivePath(0.5, 19, Constants.DriveMode.STRAFE_RIGHT, this);
+        DrivePath advanceToShootingLine  = new DrivePath(0.5, 47.5, Constants.DriveMode.FORWARD, this);
+        DrivePath strafeToAim            = new DrivePath(0.5, 22, Constants.DriveMode.STRAFE_LEFT, this);
     
         phoneCam.closeCameraDevice();
         gripWobbleGoal(this);
-        strafeRightAtBeginning.go();
-        correctToHeading(0);
-        setVelocity(flyWheel, highGoalSpeed);
-        advanceToShootingLine.go();
-        correctToHeading(0);
     
-        strafeToAim.go();
-        sleep(200);
-        correctToHeading(0);
-        sleep(200);
-        shoot(this, 3000);
-        correctToHeading(0);
-    
-        if (position == RingDeterminationPipeline.RingPosition.FOUR)
+        if (position == RingDeterminationPipeline.RingPosition.NONE)
         {
-            doFourRingsBehavior(this);
+            DrivePath strafeToAimNone = new DrivePath(0.4, 3, Constants.DriveMode.STRAFE_LEFT, this);
+        
+            setVelocity(flyWheel, highGoalSpeed);
+            advanceToShootingLine.go();
+            strafeToAimNone.go();
         }
-        else if (position == RingDeterminationPipeline.RingPosition.ONE)
+        else
+        {
+            strafeRightAtBeginning.go();
+            setVelocity(flyWheel, highGoalSpeed);
+            advanceToShootingLine.go();
+            strafeToAim.go();
+        }
+    
+        shoot(this, 3000);
+        correctToHeading(0, this);
+    
+        if (position == RingDeterminationPipeline.RingPosition.ONE)
         {
             doOneRingBehavior(this);
+        }
+        else if (position == RingDeterminationPipeline.RingPosition.FOUR)
+        {
+            doFourRingsBehavior(this);
         }
         else
         {
             doNoRingsBehavior(this);
-        }
-    
-        telemetry.addData("rings found:", position);
-        telemetry.update();
-        while (opModeIsActive())
-        {
-        
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.NonRunnable.Functions;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -42,11 +44,11 @@ public final class ImuFunctions
         globalAngle = 0;
     }
     
-    public static void correctToHeading(double heading)
+    public static void correctToHeading(double heading, LinearOpMode opMode)
     {
         setDriveDirection(Constants.DriveMode.ROTATE_CCW);
         updateAngleError(heading);
-        while (Math.abs(angleError) > 0.25)
+        while (Math.abs(angleError) > 0.25 && opMode.opModeIsActive())
         {
             setDriveMotorsVelocity(0.2 * direction);
             updateAngleError(heading);
@@ -84,11 +86,11 @@ public final class ImuFunctions
         return globalAngle;
     }
     
-    public static void turn(double heading)
+    public static void turn(double heading, LinearOpMode opMode)
     {
         setDriveDirection(Constants.DriveMode.ROTATE_CCW);
         updateAngleError(heading);
-        while (Math.abs(angleError) > 1)
+        while (Math.abs(angleError) > 1 && opMode.opModeIsActive())
         {
             setDriveMotorsVelocity(0.35 * direction);
             updateAngleError(heading);

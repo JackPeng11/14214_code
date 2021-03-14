@@ -28,7 +28,7 @@ public final class Drive
     {
         forwardComponent = -opMode.gamepad1.left_stick_y;
         strafeComponent = opMode.gamepad1.left_stick_x;
-        rotationComponent = 0.7 * opMode.gamepad1.right_stick_x;
+        rotationComponent = 0.75 * opMode.gamepad1.right_stick_x; //0.5
         
         teleopVelocityArray[0] = forwardComponent + strafeComponent + rotationComponent;
         teleopVelocityArray[1] = forwardComponent - strafeComponent - rotationComponent;
@@ -66,13 +66,10 @@ public final class Drive
                 teleopVelocityArray[i] /= maxSpeed;
             }
             
-            teleopVelocityArray[i] /= Math.abs(teleopVelocityArray[i]);
-            teleopVelocityArray[i] *= 0.9;
-            
             if (slowMode)
             {
                 teleopVelocityArray[i] /= Math.abs(teleopVelocityArray[i]);
-                teleopVelocityArray[i] *= 0.3;
+                teleopVelocityArray[i] *= 0.25; //0.4
             }
         }
     }

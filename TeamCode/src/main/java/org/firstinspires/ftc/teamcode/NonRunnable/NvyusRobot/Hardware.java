@@ -15,15 +15,11 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 import java.util.List;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.DriveMode;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_ARM_COUNTS_PER_REV;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_CLOSED_POSITION;
-import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.WOBBLE_OPEN_POSITION;
 
 //Hello
 public final class Hardware
@@ -123,30 +119,5 @@ public final class Hardware
         phoneCam.openCameraDeviceAsync(() -> phoneCam.startStreaming(320,
                                                                      240,
                                                                      OpenCvCameraRotation.SIDEWAYS_LEFT));
-    }
-    
-    public static void moveArm(LinearOpMode opMode)
-    {
-        wobbleArm.setMode(RunMode.STOP_AND_RESET_ENCODER);
-        wobble.setPosition(WOBBLE_CLOSED_POSITION);
-        opMode.sleep(1000);
-        opMode.idle();
-        
-        wobbleArm.setTargetPosition((int) (0.4 * WOBBLE_ARM_COUNTS_PER_REV));
-        wobbleArm.setMode(RunMode.RUN_TO_POSITION);
-        while (wobbleArm.isBusy())
-        {
-            wobbleArm.setPower(0.7);
-        }
-        wobble.setPosition(WOBBLE_OPEN_POSITION);
-        opMode.sleep(250);
-        opMode.idle();
-        opMode.sleep(250);
-        wobbleArm.setTargetPosition((int) (0.1 * WOBBLE_ARM_COUNTS_PER_REV));
-        while (wobbleArm.isBusy())
-        {
-            wobbleArm.setPower(0.7);
-        }
-        wobbleArm.setPower(0);
     }
 }

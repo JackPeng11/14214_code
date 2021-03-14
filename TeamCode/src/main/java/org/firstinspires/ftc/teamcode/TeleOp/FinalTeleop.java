@@ -94,7 +94,7 @@ public final class FinalTeleop extends LinearOpMode
         
         if (gamepad2.dpad_up)
         {
-            setVelocity(spinner, 0.2);
+            setVelocity(spinner, 0.3);
         }
         else if (gamepad2.dpad_down)
         {
@@ -152,7 +152,7 @@ public final class FinalTeleop extends LinearOpMode
             
             if (gamepad2.left_bumper)
             {
-                setVelocity(spinner, 0.4);
+                setVelocity(spinner, 0.6);
             }
         }
         else
@@ -221,14 +221,14 @@ public final class FinalTeleop extends LinearOpMode
         {
             setDriveDirection(Constants.DriveMode.ROTATE_CCW);
             setDriveMotorsVelocity(0.4);
-            sleep(158);
+            sleep(133);
             setDriveMotorsVelocity(0);
         }
         else if (rightPowerShot.isPressed(gamepad1.dpad_right))
         {
             setDriveDirection(Constants.DriveMode.ROTATE_CCW);
             setDriveMotorsVelocity(-0.4);
-            sleep(158);
+            sleep(133);
             setDriveMotorsVelocity(0);
         }
         setDriveDirection(Constants.DriveMode.FORWARD);

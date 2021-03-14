@@ -31,7 +31,7 @@ public final class FourRingsBehavior
         releaseByMovingBack.go();
         moveWobbleArmUp(opMode);
         goBackToLaunchLine.go();
-        turn(180);
-        correctToHeading(180);
+        turn(180, opMode);
+        correctToHeading(180, opMode);
     }
 }

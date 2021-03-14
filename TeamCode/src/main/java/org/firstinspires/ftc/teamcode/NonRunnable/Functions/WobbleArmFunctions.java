@@ -16,34 +16,9 @@ public final class WobbleArmFunctions
     {
     }
     
-    public static final boolean SECTOR_0_DOWN = wobblePositionLesserOrEqual(45);
-    public static final boolean SECTOR_1_DOWN = wobblePositionLesserOrEqual(90);
-    public static final boolean SECTOR_2_DOWN = wobblePositionLesserOrEqual(180);
-    
-    public static final boolean SECTOR_0_UP = wobblePositionGreaterOrEqual(180);
-    public static final boolean SECTOR_1_UP = wobblePositionGreaterOrEqual(180);
-    public static final boolean SECTOR_2_UP = wobblePositionGreaterOrEqual(180);
-    
-    
-    public static boolean wobbleArmReachedTarget(double wobbleArmPosition)
-    {
-        return Math.abs(wobbleArm.getCurrentPosition() - wobbleArmDegreesToCounts(wobbleArmPosition)) <= wobbleArmDegreesToCounts(
-                3);
-    }
-    
     public static double wobbleArmDegreesToCounts(double degrees)
     {
         return degrees * WOBBLE_ARM_COUNTS_PER_DEG;
-    }
-    
-    public static boolean wobblePositionGreaterOrEqual(double wobbleArmPosition)
-    {
-        return wobbleArm.getCurrentPosition() >= wobbleArmDegreesToCounts(wobbleArmPosition - 4);
-    }
-    
-    public static boolean wobblePositionLesserOrEqual(double wobbleArmPosition)
-    {
-        return wobbleArm.getCurrentPosition() <= wobbleArmDegreesToCounts(wobbleArmPosition + 4);
     }
     
     public static void moveWobbleArmDown(LinearOpMode opMode)
@@ -53,7 +28,7 @@ public final class WobbleArmFunctions
         
         while ((wobbleArm.getCurrentPosition() <= wobbleArmDegreesToCounts(183)) && opMode.opModeIsActive())
         {
-            setVelocity(wobbleArm, 0.4);
+            setVelocity(wobbleArm, 0.6);
         }
         setVelocity(wobbleArm, 0);
     }
@@ -65,7 +40,7 @@ public final class WobbleArmFunctions
     
         while ((wobbleArm.getCurrentPosition() >= wobbleArmDegreesToCounts(-183)) && opMode.opModeIsActive())
         {
-            setVelocity(wobbleArm, -0.4);
+            setVelocity(wobbleArm, -0.6);
         }
         setVelocity(wobbleArm, 0);
     }

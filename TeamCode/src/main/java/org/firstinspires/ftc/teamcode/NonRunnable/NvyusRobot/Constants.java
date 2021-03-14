@@ -31,7 +31,7 @@ public final class Constants
     public static final double FINAL_SLOW              = 16;
     public static final double INITIAL_SLOW_VELOCITY   = 0.46;
     public static final double FINAL_SLOW_VELOCITY     = 0.26;
-    public static final long   PAUSE_BETWEEN_MOVEMENTS = 0;
+    public static final long   PAUSE_BETWEEN_MOVEMENTS = 200;
     
     //angle correction
     public static final double KP_CORRECTION       = 0.01;

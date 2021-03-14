@@ -53,7 +53,7 @@ public final class IntakeFunctions
         guide.setPosition(GUIDE_CLOSED_POSITION);
         opMode.sleep(300);
         opMode.idle();
-        setVelocity(spinner, 0.19);
+        setVelocity(spinner, 0.22);
         
         opMode.sleep(sleep);
         tubeIntake.setPower(0);

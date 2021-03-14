@@ -23,15 +23,15 @@ public final class OneRingBehavior
         DrivePath strafeBackToLaunchLine = new DrivePath(0.4, 6, DriveMode.STRAFE_RIGHT, opMode);
         DrivePath releaseByMovingBack    = new DrivePath(0.3, 4, DriveMode.BACKWARD, opMode);
     
-        turn(-90);
-        correctToHeading(-90);
+        turn(-90, opMode);
+        correctToHeading(-90, opMode);
         strafeToWobbleZone.go();
         moveWobbleArmDown(opMode);
         releaseWobbleGoal(opMode);
         releaseByMovingBack.go();
         moveWobbleArmUp(opMode);
         strafeBackToLaunchLine.go();
-        turn(-90);
-        correctToHeading(-90);
+        turn(-90, opMode);
+        correctToHeading(-90, opMode);
     }
 }

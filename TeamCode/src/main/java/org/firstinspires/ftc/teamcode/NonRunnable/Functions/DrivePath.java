@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.NonRunnable.Logic.AngleCorrections;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
@@ -11,6 +12,7 @@ import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveM
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveDirection;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.setDriveMotorsVelocity;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.GeneralDriveMotorFunctions.stopDrivingRobot;
+import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.correctToHeading;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.getAngle;
 import static org.firstinspires.ftc.teamcode.NonRunnable.Functions.ImuFunctions.resetAngle;
 import static org.firstinspires.ftc.teamcode.NonRunnable.NvyusRobot.Constants.COUNTS_PER_INCH;
@@ -31,7 +33,6 @@ public class DrivePath
     private final  LinearOpMode opMode;
     private        double       distanceTraveled;
     private        double       inchesError;
-    private        double       cycles;
     
     public DrivePath(double velocity, double targetDistance, DriveMode driveMode, LinearOpMode opMode)
     {
@@ -41,23 +42,11 @@ public class DrivePath
         this.opMode = opMode;
         this.inchesError = targetDistance;
         this.distanceTraveled = 0;
-        cycles = 0;
     }
     
     public static double getCurrentVelocity()
     {
         return currentVelocity;
-    }
-    
-    public void showCycleStats()
-    {
-        double finishTime = this.runTime.milliseconds();
-        double cycleTime  = finishTime / this.cycles;
-        
-        this.opMode.telemetry.addData("Runtime", finishTime);
-        this.opMode.telemetry.addData("Cycles", this.cycles);
-        this.opMode.telemetry.addData("Latency(ms)", cycleTime);
-        this.opMode.telemetry.update();
     }
     
     public void go()
@@ -72,16 +61,12 @@ public class DrivePath
             correctionArray.update(getAngle());
             finalDriveVelocities = getCorrectedVelocities(getInitialDriveVelocities(),
                                                           correctionArray.getCorrectionArray());
-            this.opMode.telemetry.addData("distance traveled", this.distanceTraveled);
-            this.opMode.telemetry.addData("OG", Arrays.toString(getInitialDriveVelocities()));
-            this.opMode.telemetry.addData("Corrections", Arrays.toString(correctionArray.getCorrectionArray()));
-            this.opMode.telemetry.update();
     
             setDriveMotorsVelocity(finalDriveVelocities);
             updateValues();
         }
         stopDrivingRobot(this.opMode);
-        opMode.sleep(100);
+        correctToHeading(0, opMode);
     }
     
     private void prepareForStart()
@@ -101,6 +86,7 @@ public class DrivePath
         return velocityArray;
     }
     
+    @NotNull
     private double[] getInitialDriveVelocities()
     {
         double[] velocityArray = new double[4];
@@ -125,7 +111,6 @@ public class DrivePath
     
     private void updateValues()
     {
-        cycles++;
         this.distanceTraveled = BL.getCurrentPosition() / COUNTS_PER_INCH;
         this.inchesError = this.targetDistance - this.distanceTraveled;
     }
