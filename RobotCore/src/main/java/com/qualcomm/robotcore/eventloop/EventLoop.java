@@ -49,75 +49,80 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Event loops need to implement this interface. Contains methods for managing the life cycle of your robot.
  */
-public interface EventLoop {
-
-  /**
-   * Init method, this will be called before the first call to loop. You should set up
-   * your hardware in this method.
-   *
-   * Threading: called on the RobotSetupRunnable.run() thread, before the EventLoopRunnable.run()
-   * thread is created.
-   *
-   * @param eventLoopManager event loop manager that is responsible for this event loop
-   *
-   * @throws RobotCoreException if a RobotCoreException is thrown, it will be handled
-   *         by the event loop manager. The manager will report that the robot failed
-   *         to start.
-   */
-  void init(EventLoopManager eventLoopManager) throws RobotCoreException, InterruptedException;
-
-  /**
-   * This method will be repeatedly called by the event loop manager.
-   *
-   * Threading: called on the EventLoopRunnable.run() thread.
-   *
-   * If an Exception is thrown, it will be handled by the event loop manager. The manager may decide
-   * to either stop processing this iteration of the loop, or it may decide to shut down the robot.
-   */
-  void loop();
-
-  /**
-   * Update's the user portion of the driver station screen with the contents of the telemetry object
-   * here provided if a sufficiently long duration has passed since the last update.
-   * @param telemetry the telemetry object to send
-   * @param sInterval the required minimum interval. NaN indicates that a system default interval should be used.
-   */
-  void refreshUserTelemetry(TelemetryMessage telemetry, double sInterval);
-
-  /**
-   * The value to pass to {@link #refreshUserTelemetry(TelemetryMessage, double)} as the time interval
-   * parameter in order to cause a system default interval to be used.
-   */
-  double TELEMETRY_DEFAULT_INTERVAL = Double.NaN;
-
-  /**
-   * Teardown method, this will be called after the last call to loop. You should place your robot
-   * into a safe state before this method exits, since there will be no more changes to communicate
-   * with your robot.
-   *
-   * Threading: called on the EventLoopRunnable.run() thread.
-   *
-   * @throws RobotCoreException if a RobotCoreException is thrown, it will be handled by the event
-   *         loop manager. The manager will then attempt to shut down the robot without the benefit
-   *         of the teardown method.
-   */
-  void teardown() throws RobotCoreException, InterruptedException;
-
-  /**
-   * Notifies the event loop that a UsbDevice has just been attached to the system. User interface
-   * activities that receive UsbManager.ACTION_USB_DEVICE_ATTACHED notifications should retrieve
-   * the UsbDevice using intent.getParcelableExtra(UsbManager.EXTRA_DEVICE) then pass that along
-   * to this method in their event loop for processing.
-   * <p>
-   * Implementations of this method should avoid doing significant processing during this notification.
-   * Rather, they should squirrel the device away for processing during a later processedRecentlyAttachedUsbDevices
-   * call.
-   * </p>
-   *
-   * @param usbDevice the newly arrived device
-   * @see #processedRecentlyAttachedUsbDevices()
-   */
-  void onUsbDeviceAttached(UsbDevice usbDevice);
+// TODO(Noah): Consider making it so that hardware can only be accessed through an Op Mode. That way,
+//             it's no longer possible to have references to hardware that persist through a robot
+//             restart. This would require making it so that certain operations fail with a
+//             "robot starting up" or "robot stopped" error, which would in itself require robocol
+//             changes. We could have a system Op Mode that accepts a queue of specialized
+//             runnables, which provide helper code for accessing hardware that's not in the
+//             hardwareMap already.
+public interface EventLoop
+{
+    
+    /**
+     * The value to pass to {@link #refreshUserTelemetry(TelemetryMessage, double)} as the time interval
+     * parameter in order to cause a system default interval to be used.
+     */
+    double TELEMETRY_DEFAULT_INTERVAL = Double.NaN;
+    /**
+     * Init method, this will be called before the first call to loop. You should set up
+     * your hardware in this method.
+     * <p>
+     * Threading: called on the RobotSetupRunnable.run() thread, before the EventLoopRunnable.run()
+     * thread is created.
+     *
+     * @param eventLoopManager event loop manager that is responsible for this event loop
+     * @throws RobotCoreException if a RobotCoreException is thrown, it will be handled
+     *                            by the event loop manager. The manager will report that the robot failed
+     *                            to start.
+     */
+    void init(EventLoopManager eventLoopManager) throws RobotCoreException, InterruptedException;
+    /**
+     * This method will be repeatedly called by the event loop manager.
+     * <p>
+     * Threading: called on the EventLoopRunnable.run() thread.
+     * <p>
+     * If an Exception is thrown, it will be handled by the event loop manager. The manager may decide
+     * to either stop processing this iteration of the loop, or it may decide to shut down the robot.
+     */
+    void loop();
+    /**
+     * Update's the user portion of the driver station screen with the contents of the telemetry object
+     * here provided if a sufficiently long duration has passed since the last update.
+     *
+     * @param telemetry the telemetry object to send
+     * @param sInterval the required minimum interval. NaN indicates that a system default interval should be used.
+     */
+    void refreshUserTelemetry(TelemetryMessage telemetry, double sInterval);
+    
+    /**
+     * Teardown method, this will be called after the last call to loop. You should place your robot
+     * into a safe state before this method exits, since there will be no more changes to communicate
+     * with your robot.
+     * <p>
+     * Threading: called on the EventLoopRunnable.run() thread.
+     *
+     * @throws RobotCoreException if a RobotCoreException is thrown, it will be handled by the event
+     *                            loop manager. The manager will then attempt to shut down the robot without the benefit
+     *                            of the teardown method.
+     */
+    void teardown() throws RobotCoreException, InterruptedException;
+    
+    /**
+     * Notifies the event loop that a UsbDevice has just been attached to the system. User interface
+     * activities that receive UsbManager.ACTION_USB_DEVICE_ATTACHED notifications should retrieve
+     * the UsbDevice using intent.getParcelableExtra(UsbManager.EXTRA_DEVICE) then pass that along
+     * to this method in their event loop for processing.
+     * <p>
+     * Implementations of this method should avoid doing significant processing during this notification.
+     * Rather, they should squirrel the device away for processing during a later processedRecentlyAttachedUsbDevices
+     * call.
+     * </p>
+     *
+     * @param usbDevice the newly arrived device
+     * @see #processedRecentlyAttachedUsbDevices()
+     */
+    void onUsbDeviceAttached(UsbDevice usbDevice);
 
   void pendUsbDeviceAttachment(SerialNumber serialNumber, long time, TimeUnit unit);
 
@@ -154,7 +159,6 @@ public interface EventLoop {
    * @throws InterruptedException
    */
   void handleUsbModuleAttach(RobotUsbModule module) throws RobotCoreException, InterruptedException;
-
   /**
    * Process command method, this will be called if the event loop manager receives a user defined
    * command. How this command is handled is up to the event loop implementation.
@@ -163,6 +167,7 @@ public interface EventLoop {
    *
    * @param command command to process
    */
+  // TODO(Noah): Consider divorcing command processing from the event loop
   CallbackResult processCommand(Command command) throws InterruptedException, RobotCoreException;
 
   /**

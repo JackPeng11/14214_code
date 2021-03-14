@@ -16,12 +16,14 @@
 
 package org.firstinspires.ftc.robotcore.external.android;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -31,57 +33,70 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class AndroidAccelerometer implements SensorEventListener {
-  private volatile boolean listening;
-  private volatile long timestamp;
-  private volatile float x; // Acceleration minus Gx on the x-axis, in SI units (m/s^2).
-  private volatile float y; // Acceleration minus Gx on the y-axis, in SI units (m/s^2).
-  private volatile float z; // Acceleration minus Gx on the z-axis, in SI units (m/s^2).
-  private volatile DistanceUnit distanceUnit = DistanceUnit.METER;
-
-  // SensorEventListener methods
-
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-  }
-
-  @Override
-  public void onSensorChanged(SensorEvent sensorEvent) {
-    timestamp = sensorEvent.timestamp;
-    x = sensorEvent.values[0];
-    y = sensorEvent.values[1];
-    z = sensorEvent.values[2];
-  }
-
-  // public methods
-
-  /**
-   * Sets the DistanceUnit to be used.
-   */
-  public void setDistanceUnit(DistanceUnit distanceUnit) {
-    if (distanceUnit != null) {
-      this.distanceUnit = distanceUnit;
+public class AndroidAccelerometer implements SensorEventListener
+{
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private final SensorManager sensorManager = (SensorManager) AppUtil.getDefContext()
+                                                                       .getSystemService(Context.SENSOR_SERVICE);
+    
+    private volatile boolean      listening;
+    private volatile long         timestamp;
+    private volatile float        x; // Acceleration minus Gx on the x-axis, in SI units (m/s^2).
+    private volatile float        y; // Acceleration minus Gx on the y-axis, in SI units (m/s^2).
+    private volatile float        z; // Acceleration minus Gx on the z-axis, in SI units (m/s^2).
+    private volatile DistanceUnit distanceUnit = DistanceUnit.METER;
+    
+    // SensorEventListener methods
+    
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy)
+    {
     }
-  }
-
-  /**
-   * Returns the DistanceUnit being used.
-   */
-  public DistanceUnit getDistanceUnit() {
-    return distanceUnit;
-  }
-
-  /**
-   * Returns the acceleration in the x-axis.
-   */
-  public double getX() {
-    if (timestamp != 0) {
-      return distanceUnit.fromMeters(x);
+    
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent)
+    {
+        timestamp = sensorEvent.timestamp;
+        x = sensorEvent.values[0];
+        y = sensorEvent.values[1];
+        z = sensorEvent.values[2];
     }
-    return 0;
-  }
-
-  /**
+    
+    // public methods
+    
+    /**
+     * Returns the DistanceUnit being used.
+     */
+    public DistanceUnit getDistanceUnit()
+    {
+        return distanceUnit;
+    }
+    
+    /**
+     * Sets the DistanceUnit to be used.
+     */
+    public void setDistanceUnit(DistanceUnit distanceUnit)
+    {
+        if (distanceUnit != null)
+        {
+            this.distanceUnit = distanceUnit;
+        }
+    }
+    
+    /**
+     * Returns the acceleration in the x-axis.
+     */
+    public double getX()
+    {
+        if (timestamp != 0)
+        {
+            return distanceUnit.fromMeters(x);
+        }
+        return 0;
+    }
+    
+    /**
    * Returns the acceleration in the y-axis.
    */
   public double getY() {
@@ -116,8 +131,6 @@ public class AndroidAccelerometer implements SensorEventListener {
    * Returns true if the Android device has a accelerometer.
    */
   public boolean isAvailable() {
-    Activity activity = AppUtil.getInstance().getRootActivity();
-    SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
     return !sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty();
   }
 
@@ -126,8 +139,6 @@ public class AndroidAccelerometer implements SensorEventListener {
    */
   public void startListening() {
     if (!listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
       sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
       listening = true;
@@ -139,8 +150,6 @@ public class AndroidAccelerometer implements SensorEventListener {
    */
   public void stopListening() {
     if (listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       sensorManager.unregisterListener(this);
       listening = false;
       timestamp = 0;

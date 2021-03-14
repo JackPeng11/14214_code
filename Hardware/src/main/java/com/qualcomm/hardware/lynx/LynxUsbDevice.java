@@ -46,20 +46,25 @@ import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
 import com.qualcomm.robotcore.hardware.usb.RobotUsbModule;
 import com.qualcomm.robotcore.util.GlobalWarningSource;
 
+import org.firstinspires.ftc.robotcore.external.Consumer;
+import org.firstinspires.ftc.robotcore.internal.network.RobotCoreCommandList;
+import org.firstinspires.ftc.robotcore.internal.ui.ProgressParameters;
+
 /**
  * The working interface to Lynx USB Devices. Separating out the interface like this allows
  * us to create delegators where we need to.
  */
-public interface LynxUsbDevice extends RobotUsbModule, GlobalWarningSource, RobotCoreLynxUsbDevice, HardwareDevice, SyncdDevice, Engagable
-    {
+public interface LynxUsbDevice extends RobotUsbModule, GlobalWarningSource, RobotCoreLynxUsbDevice, HardwareDevice,
+                                       SyncdDevice, Engagable
+{
     RobotUsbDevice getRobotUsbDevice();
-
+    
     boolean isSystemSynthetic();
-
+    
     void setSystemSynthetic(boolean systemSynthetic);
-
+    
     void failSafe();
-
+    
     void changeModuleAddress(LynxModule module, int oldAddress, Runnable runnable);
 
     void addConfiguredModule(LynxModule module) throws RobotCoreException, InterruptedException, LynxNackException;
@@ -67,18 +72,21 @@ public interface LynxUsbDevice extends RobotUsbModule, GlobalWarningSource, Robo
     @Nullable LynxModule getConfiguredModule(int moduleAddress);
 
     void removeConfiguredModule(LynxModule module);
-
+    
     void noteMissingModule(LynxModule module, String moduleName);
-
+    
     LynxModuleMetaList discoverModules() throws RobotCoreException, InterruptedException;
-
+    
     void acquireNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException;
-
+    
     void releaseNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException;
-
+    
     void transmit(LynxMessage message) throws InterruptedException;
-
-    boolean setControlHubModuleAddressIfNecessary() throws InterruptedException, RobotCoreException;
-
+    
+    boolean setupControlHubEmbeddedModule() throws InterruptedException, RobotCoreException;
+    
     LynxUsbDeviceImpl getDelegationTarget();
-    }
+    
+    RobotCoreCommandList.LynxFirmwareUpdateResp updateFirmware(RobotCoreCommandList.FWImage image, String requestId,
+                                                               Consumer<ProgressParameters> progressConsumer);
+}

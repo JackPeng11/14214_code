@@ -44,7 +44,10 @@ import com.qualcomm.robotcore.hardware.usb.RobotUsbModule;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.SerialNumber;
 
+import org.firstinspires.ftc.robotcore.external.Consumer;
+import org.firstinspires.ftc.robotcore.internal.network.RobotCoreCommandList;
 import org.firstinspires.ftc.robotcore.internal.system.Assert;
+import org.firstinspires.ftc.robotcore.internal.ui.ProgressParameters;
 
 /**
  * This delegation class simply forwards calls on, with the single exception that it turns
@@ -136,142 +139,192 @@ public class LynxUsbDeviceDelegate implements LynxUsbDevice, HardwareDeviceClose
         assertOpen();
         return delegate.isSystemSynthetic();
         }
-    @Override public void setSystemSynthetic(boolean systemSynthetic)
+    
+        @Override
+        public void setSystemSynthetic(boolean systemSynthetic)
         {
-        assertOpen();
-        delegate.setSystemSynthetic(systemSynthetic);
+            assertOpen();
+            delegate.setSystemSynthetic(systemSynthetic);
         }
-    @Override public void failSafe()
+    
+        @Override
+        public void failSafe()
         {
-        assertOpen();
-        delegate.failSafe();
+            assertOpen();
+            delegate.failSafe();
         }
-    @Override public void lockNetworkLockAcquisitions()
+    
+        @Override
+        public void lockNetworkLockAcquisitions()
         {
-        delegate.lockNetworkLockAcquisitions();
+            delegate.lockNetworkLockAcquisitions();
         }
-
-    @Override public void setThrowOnNetworkLockAcquisition(boolean shouldThrow)
+    
+        @Override
+        public void setThrowOnNetworkLockAcquisition(boolean shouldThrow)
         {
-        delegate.setThrowOnNetworkLockAcquisition(shouldThrow);
+            delegate.setThrowOnNetworkLockAcquisition(shouldThrow);
         }
-
-    @Override public void changeModuleAddress(LynxModule module, int newAddress, Runnable runnable)
+    
+        @Override
+        public void changeModuleAddress(LynxModule module, int newAddress, Runnable runnable)
         {
-        assertOpen();
-        delegate.changeModuleAddress(module, newAddress, runnable);
+            assertOpen();
+            delegate.changeModuleAddress(module, newAddress, runnable);
         }
-    @Override public void noteMissingModule(LynxModule module, String moduleName)
+    
+        @Override
+        public void noteMissingModule(LynxModule module, String moduleName)
         {
-        assertOpen();
-        delegate.noteMissingModule(module, moduleName);
+            assertOpen();
+            delegate.noteMissingModule(module, moduleName);
         }
-    @Override public void addConfiguredModule(LynxModule module) throws RobotCoreException, InterruptedException, LynxNackException
+    
+        @Override
+        public void addConfiguredModule(LynxModule module)
+                throws RobotCoreException, InterruptedException, LynxNackException
         {
-        assertOpen();
-        delegate.addConfiguredModule(module);
+            assertOpen();
+            delegate.addConfiguredModule(module);
         }
-    @Nullable public LynxModule getConfiguredModule(int moduleAddress)
+    
+        @Nullable
+        public LynxModule getConfiguredModule(int moduleAddress)
         {
-        assertOpen();
-        return delegate.getConfiguredModule(moduleAddress);
+            assertOpen();
+            return delegate.getConfiguredModule(moduleAddress);
         }
-    @Override public void removeConfiguredModule(LynxModule module)
+    
+        @Override
+        public void removeConfiguredModule(LynxModule module)
         {
-        assertOpen();
-        delegate.removeConfiguredModule(module);
+            assertOpen();
+            delegate.removeConfiguredModule(module);
         }
-    @Override public LynxModuleMetaList discoverModules() throws RobotCoreException, InterruptedException
+    
+        @Override
+        public LynxModuleMetaList discoverModules() throws RobotCoreException, InterruptedException
         {
-        assertOpen();
-        return delegate.discoverModules();
+            assertOpen();
+            return delegate.discoverModules();
         }
-    @Override public void acquireNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException
+    
+        @Override
+        public void acquireNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException
         {
-        assertOpen();
-        delegate.acquireNetworkTransmissionLock(message);
+            assertOpen();
+            delegate.acquireNetworkTransmissionLock(message);
         }
-    @Override public void releaseNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException
+    
+        @Override
+        public void releaseNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException
         {
-        assertOpen();
-        delegate.releaseNetworkTransmissionLock(message);
+            assertOpen();
+            delegate.releaseNetworkTransmissionLock(message);
         }
-    @Override public void transmit(LynxMessage message) throws InterruptedException
+    
+        @Override
+        public void transmit(LynxMessage message) throws InterruptedException
         {
-        assertOpen();
-        delegate.transmit(message);
+            assertOpen();
+            delegate.transmit(message);
         }
-
-    @Override public boolean setControlHubModuleAddressIfNecessary() throws RobotCoreException, InterruptedException
+    
+        @Override
+        public boolean setupControlHubEmbeddedModule() throws RobotCoreException, InterruptedException
         {
-        assertOpen();
-        return delegate.setControlHubModuleAddressIfNecessary();
+            assertOpen();
+            return delegate.setupControlHubEmbeddedModule();
         }
-
-    //----------------------------------------------------------------------------------------------
-    // HardwareDevice
-    //----------------------------------------------------------------------------------------------
-
-    @Override public String getDeviceName()
+    
+        @Override
+        public RobotCoreCommandList.LynxFirmwareUpdateResp updateFirmware(RobotCoreCommandList.FWImage image,
+                                                                          String requestId,
+                                                                          Consumer<ProgressParameters> progressConsumer)
         {
-        assertOpen();
-        return delegate.getDeviceName();
+            return delegate.updateFirmware(image, requestId, progressConsumer);
         }
-    @Override public String getConnectionInfo()
+    
+        //----------------------------------------------------------------------------------------------
+        // HardwareDevice
+        //----------------------------------------------------------------------------------------------
+    
+        @Override
+        public String getDeviceName()
         {
-        assertOpen();
-        return delegate.getConnectionInfo();
+            assertOpen();
+            return delegate.getDeviceName();
         }
-    @Override public int getVersion()
+    
+        @Override
+        public String getConnectionInfo()
         {
-        assertOpen();
-        return delegate.getVersion();
+            assertOpen();
+            return delegate.getConnectionInfo();
         }
-    @Override public Manufacturer getManufacturer()
+    
+        @Override
+        public int getVersion()
         {
-        assertOpen();
-        return delegate.getManufacturer();
+            assertOpen();
+            return delegate.getVersion();
         }
-    @Override public void resetDeviceConfigurationForOpMode()
+    
+        @Override
+        public Manufacturer getManufacturer()
         {
-        assertOpen();
-        delegate.resetDeviceConfigurationForOpMode();
+            assertOpen();
+            return delegate.getManufacturer();
         }
-
-    //----------------------------------------------------------------------------------------------
-    // SyncdDevice
-    //----------------------------------------------------------------------------------------------
-
-    @Override public ShutdownReason getShutdownReason()
+    
+        @Override
+        public void resetDeviceConfigurationForOpMode()
         {
-        assertOpen();
-        return delegate.getShutdownReason();
+            assertOpen();
+            delegate.resetDeviceConfigurationForOpMode();
         }
-    @Override public void setOwner(RobotUsbModule owner)
+    
+        //----------------------------------------------------------------------------------------------
+        // SyncdDevice
+        //----------------------------------------------------------------------------------------------
+    
+        @Override
+        public ShutdownReason getShutdownReason()
         {
-        assertOpen();
-        delegate.setOwner(owner);
+            assertOpen();
+            return delegate.getShutdownReason();
         }
-    @Override public RobotUsbModule getOwner()
+    
+        @Override
+        public RobotUsbModule getOwner()
         {
-        assertOpen();
-        return delegate.getOwner();
+            assertOpen();
+            return delegate.getOwner();
         }
-
-    //----------------------------------------------------------------------------------------------
-    // RobotArmingStateNotifier
-    //----------------------------------------------------------------------------------------------
-
-    @Override public SerialNumber getSerialNumber()
+    
+        @Override
+        public void setOwner(RobotUsbModule owner)
         {
-        assertOpen();
-        return delegate.getSerialNumber();
+            assertOpen();
+            delegate.setOwner(owner);
         }
-
-    @Override public ARMINGSTATE getArmingState()
+    
+        //----------------------------------------------------------------------------------------------
+        // RobotArmingStateNotifier
+        //----------------------------------------------------------------------------------------------
+    
+        @Override
+        public SerialNumber getSerialNumber()
         {
-        assertOpen();
-        return delegate.getArmingState();
+            assertOpen();
+            return delegate.getSerialNumber();
+        }
+    
+        @Override
+        public ARMINGSTATE getArmingState()
+        {
+            assertOpen();
+            return delegate.getArmingState();
         }
 
     @Override public void registerCallback(Callback callback, boolean doInitialCallback)

@@ -16,12 +16,14 @@
 
 package org.firstinspires.ftc.robotcore.external.android;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -31,57 +33,70 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class AndroidGyroscope implements SensorEventListener {
-  private volatile boolean listening;
-  private volatile long timestamp;
-  private volatile float x; // angular speed around the x-axis, in radians/second
-  private volatile float y; // angular speed around the y-axis, in radians/second
-  private volatile float z; // angular speed around the z-axis, in radians/second
-  private volatile AngleUnit angleUnit = AngleUnit.RADIANS;
-
-  // SensorEventListener methods
-
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-  }
-
-  @Override
-  public void onSensorChanged(SensorEvent sensorEvent) {
-    timestamp = sensorEvent.timestamp;
-    x = sensorEvent.values[0];
-    y = sensorEvent.values[1];
-    z = sensorEvent.values[2];
-  }
-
-  // public methods
-
-  /**
-   * Sets the AngleUnit to be used.
-   */
-  public void setAngleUnit(AngleUnit angleUnit) {
-    if (angleUnit != null) {
-      this.angleUnit = angleUnit;
+public class AndroidGyroscope implements SensorEventListener
+{
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private final SensorManager sensorManager = (SensorManager) AppUtil.getDefContext()
+                                                                       .getSystemService(Context.SENSOR_SERVICE);
+    
+    private volatile boolean   listening;
+    private volatile long      timestamp;
+    private volatile float     x; // angular speed around the x-axis, in radians/second
+    private volatile float     y; // angular speed around the y-axis, in radians/second
+    private volatile float     z; // angular speed around the z-axis, in radians/second
+    private volatile AngleUnit angleUnit = AngleUnit.RADIANS;
+    
+    // SensorEventListener methods
+    
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy)
+    {
     }
-  }
-
-  /**
-   * Returns the AngleUnit being used.
-   */
-  public AngleUnit getAngleUnit() {
-    return angleUnit;
-  }
-
-  /**
-   * Returns the angular speed around the x-axis.
-   */
-  public float getX() {
-    if (timestamp != 0) {
-      return angleUnit.fromRadians(x);
+    
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent)
+    {
+        timestamp = sensorEvent.timestamp;
+        x = sensorEvent.values[0];
+        y = sensorEvent.values[1];
+        z = sensorEvent.values[2];
     }
-    return 0;
-  }
-
-  /**
+    
+    // public methods
+    
+    /**
+     * Returns the AngleUnit being used.
+     */
+    public AngleUnit getAngleUnit()
+    {
+        return angleUnit;
+    }
+    
+    /**
+     * Sets the AngleUnit to be used.
+     */
+    public void setAngleUnit(AngleUnit angleUnit)
+    {
+        if (angleUnit != null)
+        {
+            this.angleUnit = angleUnit;
+        }
+    }
+    
+    /**
+     * Returns the angular speed around the x-axis.
+     */
+    public float getX()
+    {
+        if (timestamp != 0)
+        {
+            return angleUnit.fromRadians(x);
+        }
+        return 0;
+    }
+    
+    /**
    * Returns the angular speed around the y-axis.
    */
   public float getY() {
@@ -116,8 +131,6 @@ public class AndroidGyroscope implements SensorEventListener {
    * Returns true if the Android device has a gyroscope.
    */
   public boolean isAvailable() {
-    Activity activity = AppUtil.getInstance().getRootActivity();
-    SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
     return !sensorManager.getSensorList(Sensor.TYPE_GYROSCOPE).isEmpty();
   }
 
@@ -126,8 +139,6 @@ public class AndroidGyroscope implements SensorEventListener {
    */
   public void startListening() {
     if (!listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       Sensor gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
       sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
       listening = true;
@@ -139,8 +150,6 @@ public class AndroidGyroscope implements SensorEventListener {
    */
   public void stopListening() {
     if (listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       sensorManager.unregisterListener(this);
       listening = false;
       timestamp = 0;

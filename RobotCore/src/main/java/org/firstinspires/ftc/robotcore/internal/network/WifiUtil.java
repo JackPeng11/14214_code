@@ -39,11 +39,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.provider.Settings;
+
+import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.R;
 import com.qualcomm.robotcore.util.Device;
@@ -59,89 +60,44 @@ import java.lang.reflect.Method;
 /*
  * A collection of useful wifi related utilities.
  */
-public class WifiUtil {
-
-    private static final String NO_AP = "None";
-    private static boolean showingLocationServicesDlg = false;
-
+public class WifiUtil
+{
+    
+    private static final String      NO_AP                      = "None";
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private static final WifiManager wifiManager                = (WifiManager) AppUtil.getDefContext()
+                                                                                       .getApplicationContext()
+                                                                                       .getSystemService(Context.WIFI_SERVICE);
+    private static       Boolean     deviceSupports5Ghz         = null;
+    private static       boolean     showingLocationServicesDlg = false;
+    
     public static boolean isAirplaneModeOn()
     {
-        return Settings.Global.getInt(AppUtil.getDefContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+        return Settings.Global.getInt(AppUtil.getDefContext().getContentResolver(),
+                                      Settings.Global.AIRPLANE_MODE_ON,
+                                      0) != 0;
     }
-
+    
     public static boolean isBluetoothOn()
     {
         return BluetoothAdapter.getDefaultAdapter() != null && BluetoothAdapter.getDefaultAdapter().isEnabled();
     }
 
-    public static boolean isWifiEnabled()
-    {
-        WifiManager mgr = getWifiManager();
-        int state = mgr.getWifiState();
-        RobotLog.i("state = " + state);
-        return getWifiManager().isWifiEnabled();
-    }
-
     public static boolean isWifiApEnabled()
     {
-        WifiManager wifiMgr = getWifiManager();
-        try {
-            Method isEnabled = wifiMgr.getClass().getMethod("isWifiApEnabled");
-            return (Boolean)isEnabled.invoke(wifiMgr);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        try
+        {
+            Method isEnabled = wifiManager.getClass().getMethod("isWifiApEnabled");
+            return (Boolean) isEnabled.invoke(wifiManager);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
+        {
             RobotLog.e("Could not invoke isWifiApEnabled " + e.toString());
         }
-
+    
         return false;
     }
-
-    public static boolean isWifiConnected()
-    {
-        /*
-         * The supplicant state may be in a state of obtaining an ip address even when wifi is not enabled!
-         * Ergo, one can not rely upon the WifiManager alone to determine connection state.
-         */
-        if (!isWifiEnabled()) {
-            return false;
-        }
-
-        WifiManager m = getWifiManager();
-        SupplicantState s = m.getConnectionInfo().getSupplicantState();
-        NetworkInfo.DetailedState state = WifiInfo.getDetailedStateOf(s);
-
-        return (state == NetworkInfo.DetailedState.CONNECTED ||
-                state == NetworkInfo.DetailedState.OBTAINING_IPADDR);
-    }
-
-    public static void doLocationServicesCheck()
-    {
-        if ((Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) || (AppUtil.getInstance().isRobotController()) || (showingLocationServicesDlg)) {
-            return;
-        }
-
-        int locationMode = 0;
-        try {
-            locationMode = Settings.Secure.getInt(AppUtil.getDefContext().getContentResolver(), Settings.Secure.LOCATION_MODE);
-        } catch (Settings.SettingNotFoundException e) {
-        }
-
-        if (locationMode == Settings.Secure.LOCATION_MODE_OFF) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(AppUtil.getInstance().getActivity());
-            alert.setMessage(Misc.formatForUser(R.string.locationServices));
-            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i)
-                {
-                    AppUtil.getInstance().getActivity().startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    showingLocationServicesDlg = false;
-                }
-            });
-            alert.create();
-            alert.show();
-            showingLocationServicesDlg = true;
-        }
-    }
-
+    
     /*
      * getConnectedSsid
      *
@@ -151,14 +107,80 @@ public class WifiUtil {
      */
     public static String getConnectedSsid()
     {
-        if (!isWifiConnected()) {
+        if (!isWifiConnected())
+        {
             return NO_AP;
-        } else {
-            WifiInfo wifiInfo = getWifiManager().getConnectionInfo();
+        }
+        else
+        {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             return wifiInfo.getSSID().replace("\"", "");
         }
     }
-
+    
+    public static boolean isWifiConnected()
+    {
+        /*
+         * The supplicant state may be in a state of obtaining an ip address even when wifi is not enabled!
+         * Ergo, one can not rely upon the WifiManager alone to determine connection state.
+         */
+        if (!isWifiEnabled())
+        {
+            return false;
+        }
+        
+        SupplicantState           s     = wifiManager.getConnectionInfo().getSupplicantState();
+        NetworkInfo.DetailedState state = WifiInfo.getDetailedStateOf(s);
+        
+        return (state == NetworkInfo.DetailedState.CONNECTED ||
+                state == NetworkInfo.DetailedState.OBTAINING_IPADDR);
+    }
+    
+    public static boolean isWifiEnabled()
+    {
+        int state = wifiManager.getWifiState();
+        RobotLog.i("state = " + state);
+        return wifiManager.isWifiEnabled();
+    }
+    
+    public static void doLocationServicesCheck()
+    {
+        if ((Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) || (AppUtil.getInstance()
+                                                                                  .isRobotController()) || (showingLocationServicesDlg))
+        {
+            return;
+        }
+        
+        int locationMode = 0;
+        try
+        {
+            locationMode = Settings.Secure.getInt(AppUtil.getDefContext().getContentResolver(),
+                                                  Settings.Secure.LOCATION_MODE);
+        } catch (Settings.SettingNotFoundException e)
+        {
+        }
+        
+        if (locationMode == Settings.Secure.LOCATION_MODE_OFF)
+        {
+            AlertDialog.Builder alert = new AlertDialog.Builder(AppUtil.getInstance().getActivity());
+            alert.setMessage(Misc.formatForUser(R.string.locationServices));
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i)
+                {
+                    AppUtil.getInstance()
+                           .getActivity()
+                           .startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    showingLocationServicesDlg = false;
+                }
+            });
+            alert.create();
+            alert.show();
+            showingLocationServicesDlg = true;
+        }
+    }
+    
     /*
      * is5GHzAvailable
      *
@@ -166,16 +188,17 @@ public class WifiUtil {
      */
     public static boolean is5GHzAvailable()
     {
-        if (Device.isRevControlHub()) {
-            return AndroidBoard.getInstance().supports5GhzAp();
-        } else {
-            WifiManager wifiManager = getWifiManager();
-            return wifiManager.is5GHzBandSupported();
+        if (deviceSupports5Ghz == null)
+        {
+            if (Device.isRevControlHub())
+            {
+                deviceSupports5Ghz = AndroidBoard.getInstance().supports5GhzAp();
+            }
+            else
+            {
+                deviceSupports5Ghz = wifiManager.is5GHzBandSupported();
+            }
         }
-    }
-
-    protected static WifiManager getWifiManager()
-    {
-        return (WifiManager)AppUtil.getDefContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        return deviceSupports5Ghz;
     }
 }

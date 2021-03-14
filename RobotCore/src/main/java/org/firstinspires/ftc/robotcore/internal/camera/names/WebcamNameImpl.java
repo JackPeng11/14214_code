@@ -35,10 +35,10 @@ package org.firstinspires.ftc.robotcore.internal.camera.names;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.os.Build;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.qualcomm.robotcore.R;
 import com.qualcomm.robotcore.eventloop.SyncdDevice;
@@ -62,7 +62,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.CameraManagerInternal;
 import org.firstinspires.ftc.robotcore.internal.camera.libuvc.api.UvcApiCameraCharacteristics;
 import org.firstinspires.ftc.robotcore.internal.camera.libuvc.api.UvcApiCameraCharacteristicsBuilder;
-import org.firstinspires.ftc.robotcore.internal.camera.libuvc.nativeobject.LibUsbDevice;
 import org.firstinspires.ftc.robotcore.internal.camera.libuvc.nativeobject.UvcDevice;
 import org.firstinspires.ftc.robotcore.internal.camera.libuvc.nativeobject.UvcStreamingInterface;
 import org.firstinspires.ftc.robotcore.internal.collections.MutableReference;
@@ -79,76 +78,87 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-@SuppressWarnings("WeakerAccess")
-public class WebcamNameImpl extends CameraNameImplBase implements WebcamNameInternal, RobotUsbModule, GlobalWarningSource, HardwareDeviceCloseOnTearDown, UserNameable
-    {
+@SuppressWarnings ("WeakerAccess")
+public class WebcamNameImpl extends CameraNameImplBase implements WebcamNameInternal, RobotUsbModule,
+                                                                  GlobalWarningSource, HardwareDeviceCloseOnTearDown,
+                                                                  UserNameable
+{
     //----------------------------------------------------------------------------------------------
     // State
     //----------------------------------------------------------------------------------------------
-
-    public static final String TAG = "WebcamNameImpl";
-    protected final Tracer tracer = Tracer.create(TAG, TRACE);
-
-    protected static Semaphore requestPermissionSemaphore = new Semaphore(1);
-    protected final Object                               lock = new Object();
-    protected final CameraManagerInternal                cameraManagerInternal;
-    protected final @NonNull SerialNumber                serialNumberPattern;
-    protected final @Nullable ArmableDeviceHelper        helper;
-    protected String                                     userName = null;
+    
+    public static final    String                TAG                        = "WebcamNameImpl";
+    protected static final UsbManager            usbManager                 = (UsbManager) AppUtil.getDefContext()
+                                                                                                  .getSystemService(
+                                                                                                          Context.USB_SERVICE);
+    protected static       Semaphore             requestPermissionSemaphore = new Semaphore(1);
+    protected final        Tracer                tracer                     = Tracer.create(TAG, TRACE);
+    protected final        Object                lock                       = new Object();
+    protected final        CameraManagerInternal cameraManagerInternal;
+    protected final @NonNull
+    SerialNumber        serialNumberPattern;
+    protected final @Nullable
+    ArmableDeviceHelper helper;
     protected final WeakReferenceSet<DelegatingCallback> delegatingCallbacks = new WeakReferenceSet<>();
-
-    @Override public String toString()
-        {
-        return "Webcam(" + serialNumberPattern + ")";
-        }
-
+    protected       String                               userName            = null;
+    
+    private WebcamNameImpl(@NonNull SerialNumber serialNumberPattern)
+    {
+        Assert.assertNotNull(serialNumberPattern);
+        this.cameraManagerInternal = (CameraManagerInternal) (ClassFactory.getInstance().getCameraManager());
+        this.serialNumberPattern = serialNumberPattern;
+        this.helper = null;
+    }
+    
     //----------------------------------------------------------------------------------------------
     // Construction (all internal)
     //----------------------------------------------------------------------------------------------
-
-    private WebcamNameImpl(@NonNull SerialNumber serialNumberPattern)
-        {
+    
+    private WebcamNameImpl(@NonNull SerialNumber serialNumberPattern, ArmableUsbDevice.OpenRobotUsbDevice opener,
+                           @NonNull SyncdDevice.Manager manager)
+    {
         Assert.assertNotNull(serialNumberPattern);
-        this.cameraManagerInternal = (CameraManagerInternal)(ClassFactory.getInstance().getCameraManager());
-        this.serialNumberPattern = serialNumberPattern;
-        this.helper = null;
-        }
-
-    private WebcamNameImpl(@NonNull SerialNumber serialNumberPattern, ArmableUsbDevice.OpenRobotUsbDevice opener, @NonNull SyncdDevice.Manager manager)
-        {
-        Assert.assertNotNull(serialNumberPattern);
-        this.cameraManagerInternal = (CameraManagerInternal)(ClassFactory.getInstance().getCameraManager());
+        this.cameraManagerInternal = (CameraManagerInternal) (ClassFactory.getInstance().getCameraManager());
         this.serialNumberPattern = serialNumberPattern;
         this.helper = new ArmableDeviceHelper(serialNumberPattern, opener, manager);
         this.helper.finishConstruction();
-        }
-
+    }
+    
+    protected static UsbManager getUsbManager()
+    {
+        return usbManager;
+    }
+    
     public static WebcamName forSerialNumber(@NonNull SerialNumber serialNumber)
-        {
+    {
         return new WebcamNameImpl(serialNumber);
-        }
-
-    public static WebcamName forSerialNumber(@NonNull SerialNumber serialNumber, ArmableUsbDevice.OpenRobotUsbDevice opener, @NonNull SyncdDevice.Manager manager)
-        {
+    }
+    
+    public static WebcamName forSerialNumber(@NonNull SerialNumber serialNumber,
+                                             ArmableUsbDevice.OpenRobotUsbDevice opener,
+                                             @NonNull SyncdDevice.Manager manager)
+    {
         return new WebcamNameImpl(serialNumber, opener, manager);
-        }
-
+    }
+    
     //----------------------------------------------------------------------------------------------
     // Equality
     //----------------------------------------------------------------------------------------------
-
-    @Override public boolean equals(Object o)
-        {
+    
+    @Override
+    public boolean equals(Object o)
+    {
         if (o instanceof WebcamNameImpl)
-            {
-            WebcamNameImpl them = (WebcamNameImpl)o;
-            return serialNumberPattern.equals(them.serialNumberPattern);
-            }
-        return super.equals(o);
-        }
-
-    @Override public int hashCode()
         {
+            WebcamNameImpl them = (WebcamNameImpl) o;
+            return serialNumberPattern.equals(them.serialNumberPattern);
+        }
+        return super.equals(o);
+    }
+    
+    @Override
+    public int hashCode()
+    {
         return serialNumberPattern.hashCode();
         }
 
@@ -299,117 +309,132 @@ public class WebcamNameImpl extends CameraNameImplBase implements WebcamNameInte
                 UvcApiCameraCharacteristicsBuilder builder = new UvcApiCameraCharacteristicsBuilder();
                 try {
                     for (UvcStreamingInterface streamingInterface : uvcDevice.getStreamingInterfaces())
-                        {
+                    {
                         builder.addStream(streamingInterface);
                         streamingInterface.releaseRef();
-                        }
+                    }
                     return builder.build();
-                    }
-                finally
-                    {
-                    builder.releaseRef();
-                    }
-                }
-            finally
+                } finally
                 {
-                uvcDevice.releaseRef();
+                    builder.releaseRef();
                 }
+            } finally
+            {
+                uvcDevice.releaseRef();
             }
-        return new UvcApiCameraCharacteristics();
+            }
+            return new UvcApiCameraCharacteristics();
         }
-
-    protected @Nullable UvcDevice findUvcDevice()
-        {
-        CameraManagerInternal cameraManagerInternal = (CameraManagerInternal)ClassFactory.getInstance().getCameraManager();
+    
+    protected @Nullable
+    UvcDevice findUvcDevice()
+    {
+        CameraManagerInternal cameraManagerInternal = (CameraManagerInternal) ClassFactory.getInstance()
+                                                                                          .getCameraManager();
         return cameraManagerInternal.findUvcDevice(this);
-        }
-
+    }
+    
     //----------------------------------------------------------------------------------------------
     // UserNameable
     //----------------------------------------------------------------------------------------------
-
-    @Nullable @Override public String getUserName()
-        {
+    
+    @Nullable
+    @Override
+    public String getUserName()
+    {
         return userName;
-        }
-
-    @Override public void setUserName(@Nullable String userName)
-        {
+    }
+    
+    @Override
+    public void setUserName(@Nullable String userName)
+    {
         this.userName = userName;
-        }
-
+    }
+    
     //----------------------------------------------------------------------------------------------
     // HardwareDevice
     //----------------------------------------------------------------------------------------------
-
-    protected static UsbManager getUsbManager()
-        {
-        return (UsbManager) AppUtil.getDefContext().getSystemService(Context.USB_SERVICE);
-        }
-
-    protected @Nullable UsbDevice getUsbDevice()
-        {
-        return getUsbManager().getDeviceList().get(getUsbDeviceNameIfAttached());
-        }
-
-    @Override public String getDeviceName()
-        {
+    
+    @Override
+    public String toString()
+    {
+        return "Webcam(" + serialNumberPattern + ")";
+    }
+    
+    @Override
+    public String getDeviceName()
+    {
         UsbDevice usbDevice = getUsbDevice();
         if (usbDevice != null)
-            {
+        {
             String manufacturer = null;
-            String product = null;
+            String product      = null;
             manufacturer = usbDevice.getManufacturerName();
             product = usbDevice.getProductName();
             manufacturer = UsbConstants.getManufacturerName(manufacturer, usbDevice.getVendorId());
             product = UsbConstants.getProductName(product, usbDevice.getVendorId(), usbDevice.getProductId());
             if (TextUtils.isEmpty(product))
-                {
-                product = AppUtil.getDefContext().getString(R.string.moduleDisplayNameWebcam);
-                }
-            return (TextUtils.isEmpty(manufacturer)) ? product : manufacturer + " " + product;
-            }
-        else
             {
-            return AppUtil.getDefContext().getString(R.string.moduleDisplayNameWebcam);
+                product = AppUtil.getDefContext().getString(R.string.moduleDisplayNameWebcam);
             }
+            return (TextUtils.isEmpty(manufacturer)) ? product : manufacturer + " " + product;
         }
-
-    @Override public String getConnectionInfo()
+        else
         {
+            return AppUtil.getDefContext().getString(R.string.moduleDisplayNameWebcam);
+        }
+    }
+    
+    protected @Nullable
+    UsbDevice getUsbDevice()
+    {
+        return usbManager.getDeviceList().get(getUsbDeviceNameIfAttached());
+    }
+    
+    @Override
+    public String getConnectionInfo()
+    {
         return "USB (" + getSerialNumber() + ")";
-        }
-
-    @Override public Manufacturer getManufacturer()
-        {
+    }
+    
+    @Override
+    public Manufacturer getManufacturer()
+    {
         return Manufacturer.Unknown;
-        }
-
-    @Override public int getVersion()
-        {
+    }
+    
+    @Override
+    public int getVersion()
+    {
         return 1;
-        }
-
-    @Override public void resetDeviceConfigurationForOpMode()
-        {
+    }
+    
+    @Override
+    public void resetDeviceConfigurationForOpMode()
+    {
         // Nothing to do
-        }
-
-    @Override public void close()
+    }
+    
+    @Override
+    public void close()
+    {
+        if (helper != null)
         {
-        if (helper != null) helper.close();
+            helper.close();
         }
-
+    }
+    
     //----------------------------------------------------------------------------------------------
     // Arming and disarming
     //----------------------------------------------------------------------------------------------
-
+    
     /**
      * {@link ArmableDeviceHelper} provides our {@link RobotUsbModule} & {@link GlobalWarningSource}
      * implementations, mostly by delegating back to us. We can't inherit like other {@link RobotUsbModule}s
      * do since we already inherit from {@link CameraNameImplBase}.
      */
-    class ArmableDeviceHelper extends ArmableUsbDevice implements SyncdDevice, CameraManagerInternal.UsbAttachmentCallback
+    class ArmableDeviceHelper extends ArmableUsbDevice implements SyncdDevice,
+                                                                  CameraManagerInternal.UsbAttachmentCallback
         {
         //------------------------------------------------------------------------------------------
         // State

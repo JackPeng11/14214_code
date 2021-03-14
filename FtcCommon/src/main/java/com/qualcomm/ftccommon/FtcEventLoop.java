@@ -63,6 +63,7 @@ package com.qualcomm.ftccommon;
 
 import android.app.Activity;
 import android.hardware.usb.UsbDevice;
+
 import androidx.annotation.Nullable;
 
 import com.qualcomm.ftccommon.configuration.RobotConfigFile;
@@ -184,7 +185,7 @@ public class FtcEventLoop extends FtcEventLoopBase {
     LynxUsbDevice temporaryEmbeddedLynxUsb = null;
     try {
       if (LynxConstants.isRevControlHub()) {
-        temporaryEmbeddedLynxUsb = ensureControlHubAddressIsSetCorrectly();
+          temporaryEmbeddedLynxUsb = ensureEmbeddedControlHubModuleIsSetUp();
       }
 
       HardwareMap hardwareMap = ftcEventLoopHandler.getHardwareMap();
@@ -253,8 +254,6 @@ public class FtcEventLoop extends FtcEventLoopBase {
 
     opModeManager.stopActiveOpMode();
     opModeManager.teardown();
-
-    ftcEventLoopHandler.close();
 
     RobotLog.ii(TAG, "======= TEARDOWN COMPLETE =======");
   }
@@ -347,222 +346,287 @@ public class FtcEventLoop extends FtcEventLoopBase {
     if (opModeToStop != null && this.opModeManager.getActiveOpMode() == opModeToStop) {
 
       RobotLog.ii(TAG, "auto-stopping OpMode '%s'", this.opModeManager.getActiveOpModeName());
-
-      // Call stop on the currently active OpMode and init the default one
-      this.opModeManager.stopActiveOpMode();
+    
+        // Call stop on the currently active OpMode and init the default one
+        this.opModeManager.stopActiveOpMode();
     }
   }
-
-
-  //------------------------------------------------------------------------------------------------
-  // Usb connection management
-  //------------------------------------------------------------------------------------------------
-
-  /**
-   * Deal with the fact that a UsbDevice has recently attached to the system
-   * @param usbDevice
-   */
-  @Override public void onUsbDeviceAttached(UsbDevice usbDevice) {
-    // Find out who it is.
-    SerialNumber serialNumber = getSerialNumberOfUsbDevice(usbDevice);
-
-    // Remember whoever it was for later
-    if (serialNumber != null) {
-      pendUsbDeviceAttachment(serialNumber, 0, TimeUnit.MILLISECONDS);
-    }
-    else {
-      // We don't actually understand under what conditions we'll be unable to open an
-      // FT_Device for which we're actually receiving a change notification: who else
-      // would have it open (for example)? We'd like to do something more, but don't
-      // have an idea of what that would look like.
-      //
-      // 2018.06.01: It is suspected that the serial number being returned as null was
-      // a consequence of a race between USB attachment notifications here and in FtDeviceManager.
-      RobotLog.ee(TAG, "ignoring: unable get serial number of attached UsbDevice vendor=0x%04x, product=0x%04x device=0x%04x name=%s",
-              usbDevice.getVendorId(), usbDevice.getProductId(), usbDevice.getDeviceId(), usbDevice.getDeviceName());
-    }
-  }
-
-  protected SerialNumber getSerialNumberOfUsbDevice(UsbDevice usbDevice) {
-    SerialNumber serialNumber = null;
-
-    serialNumber = SerialNumber.fromStringOrNull(usbDevice.getSerialNumber());
-
-    if (serialNumber==null) {
-      // Don't need this branch any more, but left in for now to preserve code paths. Remove after further testing.
-      FtDevice ftDevice = null;
-      try {
-        FtDeviceManager manager = FtDeviceManager.getInstance(); // note: we're not supposed to close this
-        ftDevice = manager.openByUsbDevice(usbDevice);
-        if (ftDevice != null) {
-          serialNumber = SerialNumber.fromStringOrNull(ftDevice.getDeviceInfo().serialNumber);
+    
+    //------------------------------------------------------------------------------------------------
+    // Usb connection management
+    //------------------------------------------------------------------------------------------------
+    
+    /**
+     * The caller of this method MUST close the returned LynxUsbDevice (if one is returned).
+     * <p>
+     * We return it instead of closing it ourselves to avoid performing the expensive arming process
+     * more than necessary.
+     * <p>
+     * If this method changes the Control Hub's embedded module's address, we'll close the LynxUsbDevice
+     * ourselves and return null instead. This is because we _want_ the module to be reset as a part
+     * of the arming process in this case, as the module should be reset after an address change.
+     */
+    private @Nullable
+    LynxUsbDevice ensureEmbeddedControlHubModuleIsSetUp() throws RobotCoreException, InterruptedException
+    {
+        RobotLog.vv(TAG, "Ensuring that the embedded Control Hub module is set up correctly");
+        LynxUsbDevice embeddedLynxUsb = (LynxUsbDevice) startUsbScanMangerIfNecessary().getDeviceManager()
+                                                                                       .createLynxUsbDevice(
+                                                                                               SerialNumber
+                                                                                                       .createEmbedded(),
+                                                                                               null);
+        boolean justChangedControlHubAddress = embeddedLynxUsb.setupControlHubEmbeddedModule();
+        if (justChangedControlHubAddress)
+        {
+            updateEditableConfigFilesWithNewControlHubAddress();
+            embeddedLynxUsb.close();
+            embeddedLynxUsb = null;
         }
-      } catch (RuntimeException e) {  // paranoia
-        // ignored
-      } finally {
-        if (ftDevice != null)
-          ftDevice.close();
-      }
+        return embeddedLynxUsb;
     }
-
-    if (serialNumber==null) { // devices that simply lack a serial number
-      try {
-        CameraManagerInternal cameraManagerInternal = (CameraManagerInternal) ClassFactory.getInstance().getCameraManager();
-        serialNumber = cameraManagerInternal.getRealOrVendorProductSerialNumber(usbDevice);
-      } catch (RuntimeException e) {
-        // ignore
-      }
-    }
-
-    return serialNumber;
-  }
-
-  @Override public void pendUsbDeviceAttachment(SerialNumber serialNumber, long time, TimeUnit unit) {
-    long nsDeadline = time==0L ? 0L : System.nanoTime() + unit.toNanos(time);
-    this.recentlyAttachedUsbDevices.put(serialNumber.getString(), nsDeadline);
-  }
-
-  /**
-   * Process any usb devices that might have recently attached.
-   * Called on the event loop thread.
-   */
-  @Override public void processedRecentlyAttachedUsbDevices() throws RobotCoreException, InterruptedException {
-
-    // Snarf a copy of the set of serial numbers
-    Set<String> serialNumbersToProcess = new HashSet<String>();
-    long now = System.nanoTime();
-
-    for (Map.Entry<String,Long> pair : this.recentlyAttachedUsbDevices.entrySet()) {
-      if (pair.getValue() <= now) {
-        serialNumbersToProcess.add(pair.getKey());
-        this.recentlyAttachedUsbDevices.remove(pair.getKey());
-      }
-    }
-
-    // If we have a handler, and there's something to handle, then handle it
-    if (this.usbModuleAttachmentHandler != null && !serialNumbersToProcess.isEmpty()) {
-
-      // Find all the UsbModules in the current hardware map
-      List<RobotUsbModule> modules = this.ftcEventLoopHandler.getHardwareMap().getAll(RobotUsbModule.class);
-
-      // For each serial number, find the module with that serial number and ask the handler to deal with it
-      for (String serialNumberString : new ArrayList<>(serialNumbersToProcess)) {
-        SerialNumber serialNumberAttached = SerialNumber.fromString(serialNumberString);
-        boolean found = false;
-        for (RobotUsbModule module : modules) {
-          if (serialNumberAttached.matches(module.getSerialNumber())) {
-            if (module.getArmingState() != RobotArmingStateNotifier.ARMINGSTATE.ARMED) {
-              serialNumbersToProcess.remove(serialNumberString);
-              handleUsbModuleAttach(module);
-              found = true;
-              break;
+    
+    private void updateEditableConfigFilesWithNewControlHubAddress() throws RobotCoreException
+    {
+        // Save the new embedded address to all editable config files. This primarily helps with
+        // backwards-compatibility.
+        RobotLog.vv(TAG, "We just auto-changed the Control Hub's address. Now auto-updating configuration files.");
+        ReadXMLFileHandler xmlReader =
+                new ReadXMLFileHandler(startUsbScanMangerIfNecessary().getDeviceManager());
+        RobotConfigFileManager configFileManager = new RobotConfigFileManager();
+        try
+        {
+            for (RobotConfigFile configFile : configFileManager.getXMLFiles())
+            {
+                if (!configFile.isReadOnly())
+                {
+                    // The embedded parent address will be read as 173, regardless of what the XML says (see
+                    // LynxUsbDeviceConfiguration).
+                    // That means we can turn right around and re-serialize it with no additional processing.
+                    RobotLog.vv(TAG, "Updating \"%s\" config file", configFile.getName());
+                    RobotConfigMap deserializedConfig = new RobotConfigMap(xmlReader.parse(configFile.getXml()));
+                    String         reserializedConfig = configFileManager.toXml(deserializedConfig);
+                    configFileManager.writeToFile(configFile, false, reserializedConfig);
+                }
             }
-          }
+        } catch (IOException e)
+        {
+            RobotLog.ee(TAG,
+                        e,
+                        "Failed to auto-update config files after automatically changing embedded Control Hub module " +
+                                "address. This is OK.");
+            // It's not the end of the world if this fails, as the Control Hub's address will be read as 173
+            // regardless of what the XML says.
         }
-        if (!found) {
-          RobotLog.vv(TAG, "processedRecentlyAttachedUsbDevices(): %s not in hwmap; ignoring", serialNumberAttached);
-        }
-      }
     }
-  }
-
-  @Override
-  public void handleUsbModuleDetach(RobotUsbModule module) throws RobotCoreException, InterruptedException {
-  // Called on the event loop thread
-    UsbModuleAttachmentHandler handler = this.usbModuleAttachmentHandler;
-    if (handler != null)
-      handler.handleUsbModuleDetach(module);
-  }
-
-  public void handleUsbModuleAttach(RobotUsbModule module) throws RobotCoreException, InterruptedException {
-  // Called on the event loop thread
-    UsbModuleAttachmentHandler handler = this.usbModuleAttachmentHandler;
-    if (handler != null)
-      handler.handleUsbModuleAttach(module);
-  }
-
-  /**
-   * The caller of this method MUST close the returned LynxUsbDevice (if one is returned).
-   *
-   * We return it instead of closing it ourselves to avoid performing the expensive arming process
-   * more than necessary.
-   *
-   * If we actually changed the address, we'll close it ourselves and return null instead.
-   * This is because we _want_ the module to be reset as a part of the arming process in this case,
-   * as the module should be reset after an address change.
-   */
-  private @Nullable LynxUsbDevice ensureControlHubAddressIsSetCorrectly() throws RobotCoreException, InterruptedException {
-    RobotLog.vv(TAG, "Ensuring that the Control Hub address is set correctly");
-    LynxUsbDevice embeddedLynxUsb = (LynxUsbDevice) startUsbScanMangerIfNecessary().getDeviceManager().createLynxUsbDevice(SerialNumber.createEmbedded(), null);
-    boolean justChangedControlHubAddress = embeddedLynxUsb.setControlHubModuleAddressIfNecessary();
-    if (justChangedControlHubAddress) {
-      updateEditableConfigFilesWithNewControlHubAddress();
-      embeddedLynxUsb.close();
-      embeddedLynxUsb = null;
-    }
-    return embeddedLynxUsb;
-  }
-
-  private void updateEditableConfigFilesWithNewControlHubAddress() throws RobotCoreException {
-    // Save the new embedded address to all editable config files. This primarily helps with backwards-compatibility.
-    RobotLog.vv(TAG, "We just auto-changed the Control Hub's address. Now auto-updating configuration files.");
-    ReadXMLFileHandler xmlReader = new ReadXMLFileHandler(startUsbScanMangerIfNecessary().getDeviceManager());
-    RobotConfigFileManager configFileManager = new RobotConfigFileManager();
-    try {
-      for (RobotConfigFile configFile : configFileManager.getXMLFiles()) {
-        if (!configFile.isReadOnly()) {
-          // The embedded parent address will be read as 173, regardless of what the XML says (see LynxUsbDeviceConfiguration).
-          // That means we can turn right around and re-serialize it with no additional processing.
-          RobotLog.vv(TAG, "Updating \"%s\" config file", configFile.getName());
-          RobotConfigMap deserializedConfig = new RobotConfigMap(xmlReader.parse(configFile.getXml()));
-          String reserializedConfig = configFileManager.toXml(deserializedConfig);
-          configFileManager.writeToFile(configFile, false, reserializedConfig);
-        }
-      }
-    } catch (IOException e) {
-      RobotLog.ee(TAG, e, "Failed to auto-update config files after automatically changing embedded Control Hub module address. This is OK.");
-      // It's not the end of the world if this fails, as the Control Hub's address will be read as 173 regardless of what the XML says.
-    }
-  }
-
-  public class DefaultUsbModuleAttachmentHandler implements UsbModuleAttachmentHandler {
-
+    
+    /**
+     * Deal with the fact that a UsbDevice has recently attached to the system
+     *
+     * @param usbDevice
+     */
     @Override
-    public void handleUsbModuleAttach(RobotUsbModule module) throws RobotCoreException, InterruptedException {
-
-      String id = nameOfUsbModule(module);
-
-      RobotLog.ii(TAG, "vv===== MODULE ATTACH: disarm %s=====vv", id);
-      module.disarm();
-
-      RobotLog.ii(TAG, "======= MODULE ATTACH: arm or pretend %s=======", id);
-      module.armOrPretend();
-
-      RobotLog.ii(TAG, "^^===== MODULE ATTACH: complete %s=====^^", id);
+    public void onUsbDeviceAttached(UsbDevice usbDevice)
+    {
+        // Find out who it is.
+        SerialNumber serialNumber = getSerialNumberOfUsbDevice(usbDevice);
+        
+        // Remember whoever it was for later
+        if (serialNumber != null)
+        {
+      pendUsbDeviceAttachment(serialNumber, 0, TimeUnit.MILLISECONDS);
+        }
+        else
+        {
+            // We don't actually understand under what conditions we'll be unable to open an
+            // FT_Device for which we're actually receiving a change notification: who else
+            // would have it open (for example)? We'd like to do something more, but don't
+            // have an idea of what that would look like.
+            //
+            // 2018.06.01: It is suspected that the serial number being returned as null was
+            // a consequence of a race between USB attachment notifications here and in FtDeviceManager.
+            RobotLog.ee(TAG,
+                        "ignoring: unable get serial number of attached UsbDevice vendor=0x%04x, product=0x%04x " +
+                                "device=0x%04x name=%s",
+                        usbDevice.getVendorId(),
+                        usbDevice.getProductId(),
+                        usbDevice.getDeviceId(),
+                        usbDevice.getDeviceName());
+        }
     }
-
+    
+    protected SerialNumber getSerialNumberOfUsbDevice(UsbDevice usbDevice)
+    {
+        SerialNumber serialNumber = null;
+        
+        serialNumber = SerialNumber.fromStringOrNull(usbDevice.getSerialNumber());
+        
+        if (serialNumber == null)
+        {
+            // Don't need this branch any more, but left in for now to preserve code paths. Remove after further
+            // testing.
+            FtDevice ftDevice = null;
+            try
+            {
+                FtDeviceManager manager = FtDeviceManager.getInstance(); // note: we're not supposed to close this
+                ftDevice = manager.openByUsbDevice(usbDevice);
+                if (ftDevice != null)
+                {
+                    serialNumber = SerialNumber.fromStringOrNull(ftDevice.getDeviceInfo().serialNumber);
+                }
+            } catch (RuntimeException e)
+            {  // paranoia
+                // ignored
+            } finally
+            {
+                if (ftDevice != null)
+                {
+                    ftDevice.close();
+                }
+            }
+        }
+        
+        if (serialNumber == null)
+        { // devices that simply lack a serial number
+            try
+            {
+                CameraManagerInternal cameraManagerInternal = (CameraManagerInternal) ClassFactory.getInstance()
+                                                                                                  .getCameraManager();
+                serialNumber = cameraManagerInternal.getRealOrVendorProductSerialNumber(usbDevice);
+            } catch (RuntimeException e)
+            {
+                // ignore
+            }
+        }
+        
+        return serialNumber;
+    }
+    
     @Override
-    public void handleUsbModuleDetach(RobotUsbModule module) throws RobotCoreException, InterruptedException {
-    // This provides the default policy for dealing with hardware modules that have experienced
-    // abnormal termination because they, e.g., had their USB cable disconnected.
-
-      String id = nameOfUsbModule(module);
-
-      RobotLog.ii(TAG, "vv===== MODULE DETACH RECOVERY: disarm %s=====vv", id);
-
-      // First thing we do is disarm the module. That will put it in a nice clean state.
-      module.disarm();
-
-      RobotLog.ii(TAG, "======= MODULE DETACH RECOVERY: pretend %s=======", id);
-
-      // Next, to make it appear more normal and functional to its clients, we make it pretend
-      module.pretend();
-
-      RobotLog.ii(TAG, "^^===== MODULE DETACH RECOVERY: complete %s=====^^", id);
+    public void pendUsbDeviceAttachment(SerialNumber serialNumber, long time, TimeUnit unit)
+    {
+        long nsDeadline = time == 0L ? 0L : System.nanoTime() + unit.toNanos(time);
+        this.recentlyAttachedUsbDevices.put(serialNumber.getString(), nsDeadline);
     }
-
-    String nameOfUsbModule(RobotUsbModule module) {
-      return HardwareFactory.getDeviceDisplayName(activityContext, module.getSerialNumber());
+    
+    /**
+     * Process any usb devices that might have recently attached.
+     * Called on the event loop thread.
+     */
+    @Override
+    public void processedRecentlyAttachedUsbDevices() throws RobotCoreException, InterruptedException
+    {
+        
+        // Snarf a copy of the set of serial numbers
+        Set<String> serialNumbersToProcess = new HashSet<String>();
+        long        now                    = System.nanoTime();
+        
+        for (Map.Entry<String, Long> pair : this.recentlyAttachedUsbDevices.entrySet())
+        {
+            if (pair.getValue() <= now)
+            {
+                serialNumbersToProcess.add(pair.getKey());
+                this.recentlyAttachedUsbDevices.remove(pair.getKey());
+            }
+        }
+        
+        // If we have a handler, and there's something to handle, then handle it
+        if (this.usbModuleAttachmentHandler != null && !serialNumbersToProcess.isEmpty())
+        {
+            
+            // Find all the UsbModules in the current hardware map
+            List<RobotUsbModule> modules = this.ftcEventLoopHandler.getHardwareMap().getAll(RobotUsbModule.class);
+            
+            // For each serial number, find the module with that serial number and ask the handler to deal with it
+            for (String serialNumberString : new ArrayList<>(serialNumbersToProcess))
+            {
+                SerialNumber serialNumberAttached = SerialNumber.fromString(serialNumberString);
+                boolean      found                = false;
+                for (RobotUsbModule module : modules)
+                {
+                    if (serialNumberAttached.matches(module.getSerialNumber()))
+                    {
+                        if (module.getArmingState() != RobotArmingStateNotifier.ARMINGSTATE.ARMED)
+                        {
+                            serialNumbersToProcess.remove(serialNumberString);
+                            handleUsbModuleAttach(module);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found)
+                {
+                    RobotLog.vv(TAG,
+                                "processedRecentlyAttachedUsbDevices(): %s not in hwmap; ignoring",
+                                serialNumberAttached);
+                }
+            }
+        }
     }
-  }
+    
+    public void handleUsbModuleAttach(RobotUsbModule module) throws RobotCoreException, InterruptedException
+    {
+        // Called on the event loop thread
+        UsbModuleAttachmentHandler handler = this.usbModuleAttachmentHandler;
+        if (handler != null)
+        {
+            handler.handleUsbModuleAttach(module);
+        }
+    }
+    
+    @Override
+    public void handleUsbModuleDetach(RobotUsbModule module) throws RobotCoreException, InterruptedException
+    {
+        // Called on the event loop thread
+        UsbModuleAttachmentHandler handler = this.usbModuleAttachmentHandler;
+        if (handler != null)
+        {
+            handler.handleUsbModuleDetach(module);
+        }
+    }
+    
+    public class DefaultUsbModuleAttachmentHandler implements UsbModuleAttachmentHandler
+    {
+        
+        @Override
+        public void handleUsbModuleAttach(RobotUsbModule module) throws RobotCoreException, InterruptedException
+        {
+            
+            String id = nameOfUsbModule(module);
+            
+            RobotLog.ii(TAG, "vv===== MODULE ATTACH: disarm %s=====vv", id);
+            module.disarm();
+            
+            RobotLog.ii(TAG, "======= MODULE ATTACH: arm or pretend %s=======", id);
+            module.armOrPretend();
+            
+            RobotLog.ii(TAG, "^^===== MODULE ATTACH: complete %s=====^^", id);
+        }
+        
+        String nameOfUsbModule(RobotUsbModule module)
+        {
+            return HardwareFactory.getDeviceDisplayName(activityContext, module.getSerialNumber());
+        }
+        
+        @Override
+        public void handleUsbModuleDetach(RobotUsbModule module) throws RobotCoreException, InterruptedException
+        {
+            // This provides the default policy for dealing with hardware modules that have experienced
+            // abnormal termination because they, e.g., had their USB cable disconnected.
+            
+            String id = nameOfUsbModule(module);
+            
+            RobotLog.ii(TAG, "vv===== MODULE DETACH RECOVERY: disarm %s=====vv", id);
+            
+            // First thing we do is disarm the module. That will put it in a nice clean state.
+            module.disarm();
+            
+            RobotLog.ii(TAG, "======= MODULE DETACH RECOVERY: pretend %s=======", id);
+            
+            // Next, to make it appear more normal and functional to its clients, we make it pretend
+            module.pretend();
+            
+            RobotLog.ii(TAG, "^^===== MODULE DETACH RECOVERY: complete %s=====^^", id);
+        }
+    }
 }

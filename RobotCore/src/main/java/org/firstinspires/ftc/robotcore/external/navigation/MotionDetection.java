@@ -30,12 +30,13 @@
 
 package org.firstinspires.ftc.robotcore.external.navigation;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -48,33 +49,44 @@ import java.util.concurrent.TimeUnit;
 /**
  * A class that will notify listeners when a phone is in motion.
  */
-public class MotionDetection implements SensorEventListener {
-
-    public interface MotionDetectionListener {
+public class MotionDetection implements SensorEventListener
+{
+    
+    private final static String TAG = "MotionDetection";
+    
+    private final static boolean                                       DEBUG                       = false;
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private final        SensorManager                                 sensorManager               =
+            (SensorManager) AppUtil.getDefContext()
+                                   .getSystemService(
+                                           Context.SENSOR_SERVICE);
+    private final        double                                        DEFAULT_DETECTION_THRESHOLD = 2.0;
+    private final        int                                           DEFAULT_RATE_LIMIT_SECONDS  = 1;
+    private              double                                        detectionThreshold;
+    private              int                                           rateLimitSeconds;
+    private              boolean                                       listening;
+    private              CopyOnWriteArrayList<MotionDetectionListener> listeners                   =
+            new CopyOnWriteArrayList<>();
+    private              Deadline                                      rateLimiter;
+    
+    public interface MotionDetectionListener
+    {
         void onMotionDetected(double vector);
     }
-
-    private final static boolean DEBUG = false;
-    private final static String TAG = "MotionDetection";
-
-    private final double DEFAULT_DETECTION_THRESHOLD = 2.0;
-    private final int DEFAULT_RATE_LIMIT_SECONDS = 1;
-    private double detectionThreshold;
-    private int rateLimitSeconds;
-    private boolean listening;
-    private CopyOnWriteArrayList<MotionDetectionListener> listeners = new CopyOnWriteArrayList<>();
-    private Deadline rateLimiter;
-
-    public class Vector {
+    
+    public class Vector
+    {
         double x;
         double y;
         double z;
-
+        
         public double magnitude()
         {
-            return Math.sqrt(x*x + y*y + z*z);
+            return Math.sqrt(x * x + y * y + z * z);
         }
     }
+    
     protected Vector gravity = new Vector();
 
     /**
@@ -144,8 +156,6 @@ public class MotionDetection implements SensorEventListener {
      */
     public boolean isAvailable()
     {
-        Activity activity = AppUtil.getInstance().getRootActivity();
-        SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         return !sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty();
     }
 
@@ -155,8 +165,6 @@ public class MotionDetection implements SensorEventListener {
     public void startListening()
     {
         if (!listening) {
-            Activity activity = AppUtil.getInstance().getRootActivity();
-            SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
             Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
             listening = true;
@@ -169,8 +177,6 @@ public class MotionDetection implements SensorEventListener {
     public void stopListening()
     {
         if (listening) {
-            Activity activity = AppUtil.getInstance().getRootActivity();
-            SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
             sensorManager.unregisterListener(this);
             listening = false;
         }

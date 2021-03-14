@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.ftccommon;
 
 import android.content.Context;
+
 import androidx.annotation.Nullable;
 
 import com.qualcomm.ftccommon.configuration.USBScanManager;
@@ -50,7 +51,6 @@ import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.ConfigurationUtility;
 import com.qualcomm.robotcore.hardware.configuration.ControllerConfiguration;
-import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.usb.RobotArmingStateNotifier;
 import com.qualcomm.robotcore.robocol.TelemetryMessage;
 import com.qualcomm.robotcore.robot.RobotState;
@@ -210,75 +210,112 @@ public class FtcEventLoopHandler implements BatteryChecker.BatteryWatcher {
    * @param serialNumber            the serial number of the object to retrieve
    * @param usbScanManagerSupplier  how to get a {@link USBScanManager} if it ends up we need one
    */
-  public @Nullable <T> T getHardwareDevice(Class<? extends T> classOrInterface, final SerialNumber serialNumber, Supplier<USBScanManager> usbScanManagerSupplier) {
-    synchronized (hardwareFactory) {
-      RobotLog.vv(TAG, "getHardwareDevice(%s)...", serialNumber);
-      try {
-        getHardwareMap();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        return null;
-      } catch (RobotCoreException e) {
-        return null;
-      }
-
-      Object oResult = hardwareMap.get(Object.class, serialNumber);
-
-      if (oResult == null) {
-        oResult = hardwareMapExtra.get(Object.class, serialNumber);
-      }
-
-      if (oResult == null) {
-        /** the device isn't in the hwmap. but is it actually attached? */
-        /** first, check for it's scannable */
-        final SerialNumber scannableSerialNumber = serialNumber.getScannableDeviceSerialNumber();
-
-        boolean tryScannable = true;
-        if (!scannableSerialNumber.equals(serialNumber)) { // already did that check
-          if (hardwareMap.get(Object.class, scannableSerialNumber) != null || hardwareMapExtra.get(Object.class, scannableSerialNumber) != null) {
-            RobotLog.ee(TAG, "internal error: %s absent but scannable %s present", serialNumber, scannableSerialNumber);
-            tryScannable = false;
-          }
-        }
-
-        if (tryScannable) {
-          final USBScanManager usbScanManager = usbScanManagerSupplier.get();
-          if (usbScanManager != null) {
-            try {
-              ScannedDevices scannedDevices = usbScanManager.awaitScannedDevices();
-              if (scannedDevices.containsKey(scannableSerialNumber)) {
-                /** yes, it's there. build a new configuration for it */
-                ConfigurationUtility configurationUtility = new ConfigurationUtility();
-                ControllerConfiguration controllerConfiguration = configurationUtility.buildNewControllerConfiguration(scannableSerialNumber, scannedDevices.get(scannableSerialNumber), usbScanManager.getLynxModuleMetaListSupplier(scannableSerialNumber));
-                if (controllerConfiguration != null) {
-                  controllerConfiguration.setEnabled(true);
-                  controllerConfiguration.setKnownToBeAttached(true);
-                  /** get access to the actual device */
-                  hardwareFactory.instantiateConfiguration(hardwareMapExtra, controllerConfiguration, eventLoopManager);
-                  oResult = hardwareMapExtra.get(Object.class, serialNumber);
-                  RobotLog.ii(TAG, "found %s: hardwareMapExtra:", serialNumber);
-                  hardwareMapExtra.logDevices();
-                } else {
-                  RobotLog.ee(TAG, "buildNewControllerConfiguration(%s) failed", scannableSerialNumber);
-                }
-              } else {
-                RobotLog.ee(TAG, "");
-              }
-            } catch (InterruptedException e) {
+  public @Nullable <T> T getHardwareDevice(Class<? extends T> classOrInterface, final SerialNumber serialNumber, Supplier<USBScanManager> usbScanManagerSupplier)
+  {
+      synchronized (hardwareFactory)
+      {
+          RobotLog.vv(TAG, "getHardwareDevice(%s)...", serialNumber);
+          try
+          {
+              getHardwareMap();
+          } catch (InterruptedException e)
+          {
               Thread.currentThread().interrupt();
-            } catch (RobotCoreException e) {
-              RobotLog.ee(TAG, e, "exception in getHardwareDevice(%s)", serialNumber);
-            }
-          } else {
-            RobotLog.ee(TAG, "usbScanManager supplied as null");
+              return null;
+          } catch (RobotCoreException e)
+          {
+              return null;
           }
-        }
-      }
-
-      T result = null;
-      if (oResult != null && classOrInterface.isInstance(oResult)) {
-        result = classOrInterface.cast(oResult);
-      }
+        
+          Object oResult = hardwareMap.get(Object.class, serialNumber);
+        
+          if (oResult == null)
+          {
+              oResult = hardwareMapExtra.get(Object.class, serialNumber);
+          }
+        
+          if (oResult == null)
+          {
+              /** the device isn't in the hwmap. but is it actually attached? */
+              /** first, check for it's scannable */
+              final SerialNumber scannableSerialNumber = serialNumber.getScannableDeviceSerialNumber();
+            
+              boolean tryScannable = true;
+              if (!scannableSerialNumber.equals(serialNumber))
+              { // already did that check
+                  if (hardwareMap.get(Object.class, scannableSerialNumber) != null || hardwareMapExtra.get(Object.class,
+                                                                                                           scannableSerialNumber) != null)
+                  {
+                      // TODO(Noah): I don't know why this is considered as an error. This is the exact scenario that
+                      //  indicates
+                      //  that we should do a scan, right?
+                      //             I believe not setting tryScannable to false would fix issue #1203
+                      RobotLog.ee(TAG,
+                                  "internal error: %s absent but scannable %s present",
+                                  serialNumber,
+                                  scannableSerialNumber);
+                      tryScannable = false;
+                  }
+              }
+            
+              if (tryScannable)
+              {
+                  final USBScanManager usbScanManager = usbScanManagerSupplier.get();
+                  if (usbScanManager != null)
+                  {
+                      try
+                      {
+                          ScannedDevices scannedDevices = usbScanManager.awaitScannedDevices();
+                          if (scannedDevices.containsKey(scannableSerialNumber))
+                          {
+                              /** yes, it's there. build a new configuration for it */
+                              ConfigurationUtility configurationUtility = new ConfigurationUtility();
+                              ControllerConfiguration controllerConfiguration =
+                                      configurationUtility.buildNewControllerConfiguration(
+                                              scannableSerialNumber,
+                                              scannedDevices.get(scannableSerialNumber),
+                                              usbScanManager.getLynxModuleMetaListSupplier(scannableSerialNumber));
+                              if (controllerConfiguration != null)
+                              {
+                                  controllerConfiguration.setEnabled(true);
+                                  controllerConfiguration.setKnownToBeAttached(true);
+                                  /** get access to the actual device */
+                                  hardwareFactory.instantiateConfiguration(hardwareMapExtra,
+                                                                           controllerConfiguration,
+                                                                           eventLoopManager);
+                                  oResult = hardwareMapExtra.get(Object.class, serialNumber);
+                                  RobotLog.ii(TAG, "found %s: hardwareMapExtra:", serialNumber);
+                                  hardwareMapExtra.logDevices();
+                              }
+                              else
+                              {
+                                  RobotLog.ee(TAG, "buildNewControllerConfiguration(%s) failed", scannableSerialNumber);
+                              }
+                          }
+                          else
+                          {
+                              RobotLog.ee(TAG, "");
+                          }
+                      } catch (InterruptedException e)
+                      {
+                          Thread.currentThread().interrupt();
+                      } catch (RobotCoreException e)
+                      {
+                          RobotLog.ee(TAG, e, "exception in getHardwareDevice(%s)", serialNumber);
+                      }
+                  }
+                  else
+                  {
+                      RobotLog.ee(TAG, "usbScanManager supplied as null");
+                  }
+              }
+          }
+        
+          T result = null;
+          if (oResult != null && classOrInterface.isInstance(oResult))
+          {
+              result = classOrInterface.cast(oResult);
+          }
 
       RobotLog.vv(TAG, "...getHardwareDevice(%s)=%s,%s", serialNumber, oResult, result);
       return result;

@@ -354,21 +354,21 @@ public class FtcRobotControllerActivity extends Activity
     immersion = new ImmersiveMode(getWindow().getDecorView());
     dimmer = new Dimmer(this);
     dimmer.longBright();
-
+  
     programmingModeManager = new ProgrammingModeManager();
     programmingModeManager.register(new ProgrammingWebHandlers());
     programmingModeManager.register(new OnBotJavaProgrammingMode());
-
+  
     updateUI = createUpdateUI();
     callback = createUICallback(updateUI);
-
+  
     PreferenceManager.setDefaultValues(this, R.xml.app_settings, false);
-
+  
     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "");
-
+  
     hittingMenuButtonBrightensScreen();
-
+  
     wifiLock.acquire();
     callback.networkConnectionUpdate(NetworkConnection.NetworkEvent.DISCONNECTED);
     readNetworkType();
@@ -378,13 +378,17 @@ public class FtcRobotControllerActivity extends Activity
     logDeviceSerialNumber();
     AndroidBoard.getInstance().logAndroidBoardInfo();
     RobotLog.logDeviceInfo();
-
-    if (preferencesHelper.readBoolean(getString(R.string.pref_wifi_automute), false)) {
+  
+    if (preferencesHelper.readBoolean(getString(R.string.pref_wifi_automute), false))
+    {
       initWifiMute(true);
     }
-
+  
     FtcAboutActivity.setBuildTimeFromBuildConfig(BuildConfig.BUILD_TIME);
-
+  
+    // check to see if there is a preferred Wi-Fi to use.
+    checkPreferredChannel();
+  
     FtcDashboard.start();
   }
 
@@ -406,17 +410,6 @@ public class FtcRobotControllerActivity extends Activity
   protected void onStart() {
     super.onStart();
     RobotLog.vv(TAG, "onStart()");
-
-    // If we're start()ing after a stop(), then shut the old robot down so
-    // we can refresh it with new state (e.g., with new hw configurations)
-    shutdownRobot();
-
-    updateUIAndRequestRobotSetup();
-
-    cfgFileMgr.getActiveConfigAndUpdateUI();
-
-    // check to see if there is a preferred Wi-Fi to use.
-    checkPreferredChannel();
 
     entireScreenLayout.setOnTouchListener(new View.OnTouchListener() {
       @Override
@@ -635,68 +628,88 @@ public class FtcRobotControllerActivity extends Activity
    * Updates the orientation of monitorContainer (which contains cameraMonitorView and
    * tfodMonitorView) based on the given configuration. Makes the children split the space.
    */
-  private void updateMonitorLayout(Configuration configuration) {
+  private void updateMonitorLayout(Configuration configuration)
+  {
     LinearLayout monitorContainer = (LinearLayout) findViewById(R.id.monitorContainer);
-    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+    {
       // When the phone is landscape, lay out the monitor views horizontally.
       monitorContainer.setOrientation(LinearLayout.HORIZONTAL);
-      for (int i = 0; i < monitorContainer.getChildCount(); i++) {
+      for (int i = 0; i < monitorContainer.getChildCount(); i++)
+      {
         View view = monitorContainer.getChildAt(i);
         view.setLayoutParams(new LayoutParams(0, LayoutParams.MATCH_PARENT, 1 /* weight */));
       }
-    } else {
+    }
+    else
+    {
       // When the phone is portrait, lay out the monitor views vertically.
       monitorContainer.setOrientation(LinearLayout.VERTICAL);
-      for (int i = 0; i < monitorContainer.getChildCount(); i++) {
+      for (int i = 0; i < monitorContainer.getChildCount(); i++)
+      {
         View view = monitorContainer.getChildAt(i);
         view.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1 /* weight */));
       }
     }
     monitorContainer.requestLayout();
   }
-
-  @Override
-  protected void onActivityResult(int request, int result, Intent intent) {
-    if (request == REQUEST_CONFIG_WIFI_CHANNEL) {
-      if (result == RESULT_OK) {
-        AppUtil.getInstance().showToast(UILocation.BOTH, context.getString(R.string.toastWifiConfigurationComplete));
+  
+    @Override
+    protected void onActivityResult(int request, int result, Intent intent)
+    {
+      if (request == REQUEST_CONFIG_WIFI_CHANNEL)
+      {
+        if (result == RESULT_OK)
+        {
+          AppUtil.getInstance().showToast(UILocation.BOTH,
+                                          context.getString(R.string.toastWifiConfigurationComplete));
+        }
+      }
+      // was some historical confusion about launch codes here, so we err safely
+      if (request == RequestCode.CONFIGURE_ROBOT_CONTROLLER.ordinal() || request == RequestCode.SETTINGS_ROBOT_CONTROLLER
+              .ordinal())
+      {
+        // We always do a refresh, whether it was a cancel or an OK, for robustness
+        shutdownRobot();
+        cfgFileMgr.getActiveConfigAndUpdateUI();
+        updateUIAndRequestRobotSetup();
       }
     }
-    // was some historical confusion about launch codes here, so we err safely
-    if (request == RequestCode.CONFIGURE_ROBOT_CONTROLLER.ordinal() || request == RequestCode.SETTINGS_ROBOT_CONTROLLER.ordinal()) {
-      // We always do a refresh, whether it was a cancel or an OK, for robustness
-      cfgFileMgr.getActiveConfigAndUpdateUI();
+  
+    public void onServiceBind(final FtcRobotControllerService service)
+    {
+      RobotLog.vv(FtcRobotControllerService.TAG, "%s.controllerService=bound", TAG);
+      controllerService = service;
+      updateUI.setControllerService(controllerService);
+    
+      updateUIAndRequestRobotSetup();
+      programmingModeManager.setState(new FtcRobotControllerServiceState()
+      {
+        @NonNull
+        @Override
+        public WebServer getWebServer()
+        {
+          return service.getWebServer();
+        }
+      
+        @Override
+        public EventLoopManager getEventLoopManager()
+        {
+          return service.getRobot().eventLoopManager;
+        }
+      });
+    
+      FtcDashboard.attachWebServer(service.getWebServer());
     }
-  }
-
-  public void onServiceBind(final FtcRobotControllerService service) {
-    RobotLog.vv(FtcRobotControllerService.TAG, "%s.controllerService=bound", TAG);
-    controllerService = service;
-    updateUI.setControllerService(controllerService);
-
-    updateUIAndRequestRobotSetup();
-    programmingModeManager.setState(new FtcRobotControllerServiceState() {
-      @NonNull
-      @Override
-      public WebServer getWebServer() {
-        return service.getWebServer();
-      }
-
-      @Override
-      public EventLoopManager getEventLoopManager() {
-        return service.getRobot().eventLoopManager;
-      }
-    });
-
-    FtcDashboard.attachWebServer(service.getWebServer());
-  }
-
-  private void updateUIAndRequestRobotSetup() {
-    if (controllerService != null) {
-      callback.networkConnectionUpdate(controllerService.getNetworkConnectionStatus());
-      callback.updateRobotStatus(controllerService.getRobotStatus());
-      // Only show this first-time toast on headless systems: what we have now on non-headless suffices
-      requestRobotSetup(LynxConstants.isRevControlHub()
+  
+    private void updateUIAndRequestRobotSetup()
+    {
+      if (controllerService != null)
+      {
+        callback.networkConnectionUpdate(controllerService.getNetworkConnectionStatus());
+        callback.updateRobotStatus(controllerService.getRobotStatus());
+        // Only show this first-time toast on headless systems: what we have now on non-headless suffices
+        requestRobotSetup(LynxConstants.isRevControlHub()
         ? new Runnable() {
             @Override public void run() {
               showRestartRobotCompleteToast(R.string.toastRobotSetupComplete);

@@ -35,31 +35,31 @@ package com.qualcomm.hardware.lynx;
 import androidx.annotation.NonNull;
 
 import com.qualcomm.hardware.lynx.commands.LynxCommand;
+import com.qualcomm.hardware.lynx.commands.LynxInterface;
 import com.qualcomm.hardware.lynx.commands.LynxMessage;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.Engagable;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.RobotCoreLynxModule;
-import com.qualcomm.robotcore.util.SerialNumber;
 
 /**
  * LynxModuleIntf is an interface to LynxModule so as to allow for an alternate
  * substitution of PretendLynxModule when necessary.
  */
 public interface LynxModuleIntf extends RobotCoreLynxModule, HardwareDevice, Engagable
-    {
-    <T> T acquireI2cLockWhile(Supplier<T> supplier)                     throws InterruptedException, RobotCoreException, LynxNackException;
-    void acquireNetworkTransmissionLock(@NonNull LynxMessage message)   throws InterruptedException;
-    void releaseNetworkTransmissionLock(@NonNull LynxMessage message)   throws InterruptedException;
-    void validateCommand(LynxMessage lynxMessage)               throws LynxUnsupportedCommandException;
+{
+    <T> T acquireI2cLockWhile(Supplier<T> supplier) throws InterruptedException, RobotCoreException, LynxNackException;
+    void acquireNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException;
+    void releaseNetworkTransmissionLock(@NonNull LynxMessage message) throws InterruptedException;
+    void validateCommand(LynxMessage lynxMessage) throws LynxUnsupportedCommandException;
     boolean isCommandSupported(Class<? extends LynxCommand> command);
-    void sendCommand(LynxMessage message)                       throws InterruptedException, LynxUnsupportedCommandException;
+    void sendCommand(LynxMessage message) throws InterruptedException, LynxUnsupportedCommandException;
     void resetPingTimer(@NonNull LynxMessage message);
-    void retransmit(LynxMessage message)                        throws InterruptedException;
-    void finishedWithMessage(LynxMessage message)               throws InterruptedException;
+    void retransmit(LynxMessage message) throws InterruptedException;
+    void finishedWithMessage(LynxMessage message) throws InterruptedException;
     void noteAttentionRequired();
     void noteDatagramReceived();
     void noteNotResponding();
     boolean isNotResponding();
-    int getInterfaceBaseCommandNumber(String interfaceName);
-    }
+    LynxInterface getInterface(String interfaceName);
+}

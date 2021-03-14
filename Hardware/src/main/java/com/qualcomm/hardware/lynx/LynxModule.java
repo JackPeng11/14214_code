@@ -33,6 +33,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.qualcomm.hardware.lynx;
 
 import android.graphics.Color;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -75,8 +76,8 @@ import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareDeviceHealth;
-import com.qualcomm.robotcore.hardware.VisuallyIdentifiableHardwareDevice;
 import com.qualcomm.robotcore.hardware.RobotConfigNameable;
+import com.qualcomm.robotcore.hardware.VisuallyIdentifiableHardwareDevice;
 import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.usb.RobotArmingStateNotifier;
 import com.qualcomm.robotcore.util.ClassUtil;
@@ -118,7 +119,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * {@link LynxModule} represents the connection between the host and a particular
- * Lynx controller module. Multiple Lynx controller modules may be chained together over RS485
+ * Lynx controller module. Multiple Lynx controller modules may be chained together over RS-485
  * and share a common USB connection.
  *
  * @see LynxUsbDeviceImpl
@@ -327,7 +328,7 @@ public class LynxModule extends LynxCommExceptionHandler implements LynxModuleIn
 
     @Override public String toString()
         {
-        return Misc.formatForUser("LynxModule(mod#=%d)", this.moduleAddress);
+            return Misc.formatForUser("LynxModule(mod#=%d, serial=%s)", this.moduleAddress, getSerialNumber());
         }
 
     @Override public void close()
@@ -966,24 +967,24 @@ public class LynxModule extends LynxCommExceptionHandler implements LynxModuleIn
     /** Do all the stuff we need to do when we've become aware that this module is in fact
      * attached to its USB device. */
     public void pingAndQueryKnownInterfacesAndEtc(long randSeed) throws RobotCoreException, InterruptedException
-        {
+    {
         RobotLog.vv(TAG, "pingAndQueryKnownInterfaces mod=%d", this.getModuleAddress());
         // We always ping first, just in case he's stuck right now in discovery mode.
         // Note that, in doing so, we also need to make sure we ping the parent first
         // before we ping any children; that is the responsibility of our caller.
         pingInitialContact();
-        queryInterface(LynxDekaInterfaceCommand.theInterface);
+        queryInterface(LynxDekaInterfaceCommand.createDekaInterface());
         startFtdiResetWatchdog();
         if (isUserModule())
-            {
+        {
             initializeDebugLogging();
             initializeLEDS();
-
+    
             // Figure out if we're the module embedded in the Control Hub
             if (this.isParent())
-                {
+            {
                 if (LynxConstants.isEmbeddedSerialNumber(this.getSerialNumber()))
-                    {
+                {
                     RobotLog.vv(TAG, "setAsControlHubEmbeddedModule(mod=%d)", this.getModuleAddress());
                     EmbeddedControlHubModule.set(this);
                     }
@@ -1070,7 +1071,6 @@ public class LynxModule extends LynxCommExceptionHandler implements LynxModuleIn
         synchronized (this.interfacesQueried)
             {
             LynxQueryInterfaceCommand queryInterfaceCommand = new LynxQueryInterfaceCommand(this, theInterface.getInterfaceName());
-            this.interfacesQueried.put(theInterface.getInterfaceName(), theInterface);
             try {
                 // Query the module
                 LynxQueryInterfaceResponse response = queryInterfaceCommand.sendReceive();
@@ -1092,70 +1092,83 @@ public class LynxModule extends LynxCommExceptionHandler implements LynxModuleIn
                 // Add the current notion of the commands in this interface
                 int iCommand = 0;
                 for (Class<? extends LynxInterfaceCommand> interfaceCommandClass : interfaceCommandClasses)
-                    {
+                {
                     // If the module returned fewer commands for this interface than what we know
                     // about, then we'll assume it's working with an older version of the interface.
                     // This policy allows commands to be added to the end of the interface while still
                     // using the same interface name.
                     if (iCommand >= response.getNumberOfCommands())
-                        {
-                        RobotLog.vv(TAG, "mod#=%d intf=%s: expected %d commands; found %d", getModuleAddress(), theInterface.getInterfaceName(), interfaceCommandClasses.size(), response.getNumberOfCommands());
+                    {
+                        RobotLog.vv(TAG,
+                                    "mod#=%d intf=%s: expected %d commands; found %d",
+                                    getModuleAddress(),
+                                    theInterface.getInterfaceName(),
+                                    interfaceCommandClasses.size(),
+                                    response.getNumberOfCommands());
                         break;
-                        }
-
-                    if (interfaceCommandClass==null)
-                        {
+                    }
+    
+                    if (interfaceCommandClass == null)
+                    {
                         // empty, placeholder entry in table
-                        }
+                    }
                     else
+                    {
+                        try
                         {
-                        try {
-                            int commandNumber = iCommand + response.getCommandNumberFirst();
-                            MessageClassAndCtor pair = new MessageClassAndCtor();
+                            int                 commandNumber = iCommand + response.getCommandNumberFirst();
+                            MessageClassAndCtor pair          = new MessageClassAndCtor();
                             pair.clazz = interfaceCommandClass;
                             pair.assignCtor();
                             commandClasses.put(commandNumber, pair);
                             supportedCommands.add(interfaceCommandClass);
-                            }
-                        catch (NoSuchMethodException|RuntimeException e)
-                            {
+                        } catch (NoSuchMethodException | RuntimeException e)
+                        {
                             RobotLog.ee(TAG, e, "exception registering %s", interfaceCommandClass.getSimpleName());
-                            }
                         }
-                    iCommand++;
                     }
-
+                    iCommand++;
+                }
+    
+                this.interfacesQueried.put(theInterface.getInterfaceName(), theInterface);
                 supported = true;
-                }
-            catch (LynxNackException e)
-                {
-                // The interface is not supported. Leave the nack in the command so that
-                // getInterfaceBaseCommandNumber will find it later.
-                RobotLog.vv(TAG, "mod#=%d queryInterface(): interface %s is not supported", getModuleAddress(), theInterface.getInterfaceName());
-                }
-            catch (RuntimeException e)
-                {
-                RobotLog.ee(TAG, e, "exception during queryInterface(%s)", theInterface.getInterfaceName());
-                }
-            }
-        return supported;
-        }
-
-    /** Returns the first command number to use for the given interface. Throws if not supported */
-    public int getInterfaceBaseCommandNumber(String interfaceName)
-        {
-        synchronized (this.interfacesQueried)
+            } catch (LynxNackException e)
             {
-            LynxInterface anInterface = this.interfacesQueried.get(interfaceName);
-            if (anInterface == null)
-                return LynxInterface.ERRONEOUS_COMMAND_NUMBER;  // we never queried. why? shutdown?
-
-            if (!anInterface.wasNacked())
+                RobotLog.vv(TAG,
+                            "mod#=%d queryInterface(): interface %s is not supported",
+                            getModuleAddress(),
+                            theInterface.getInterfaceName());
+                // Mark this interface as not supported, and add it to the map
+                theInterface.setWasNacked(true);
+                this.interfacesQueried.put(theInterface.getInterfaceName(), theInterface);
+            } catch (RuntimeException e)
+            {
+                RobotLog.ee(TAG, e, "exception during queryInterface(%s)", theInterface.getInterfaceName());
+                RobotLog.setGlobalErrorMsg("REV Hub interface query failed");
+            }
+            }
+            return supported;
+        }
+    
+        /**
+         * Returns null if the interface has not been queried or is not supported
+         */
+        @Override
+        public LynxInterface getInterface(String interfaceName)
+        {
+            synchronized (this.interfacesQueried)
+            {
+                LynxInterface anInterface = this.interfacesQueried.get(interfaceName);
+                if (anInterface == null)
                 {
-                return anInterface.getBaseCommandNumber();
+                    RobotLog.ee(TAG, "interface \"%s\" has not been successfully queried for %s", interfaceName, this);
                 }
-            else
-                throw new IllegalArgumentException(String.format("interface \"%s\" not supported", interfaceName));
+                else if (anInterface.wasNacked())
+                {
+                    RobotLog.ee(TAG, "interface \"%s\" not supported on %s", interfaceName, this);
+                }
+            
+                return anInterface;
             }
         }
 
@@ -1749,66 +1762,76 @@ public class LynxModule extends LynxCommExceptionHandler implements LynxModuleIn
      * Sends a command to the module, scheduling retransmissions as necessary.
      */
     public void sendCommand(LynxMessage command) throws InterruptedException, LynxUnsupportedCommandException
-        {
+    {
         command.setMessageNumber(getNewMessageNumber());
         int msgnumCur = command.getMessageNumber();
-
+    
         // Serialize this guy and remember it
-        LynxDatagram datagram = new LynxDatagram(command); // throws LynxUnsupportedCommandNumberException
+        LynxDatagram datagram = new LynxDatagram(command); // throws LynxUnsupportedCommandException
         command.setSerialization(datagram);
-
+    
         // Remember this guy as someone who needs acknowledgement
         boolean moduleWillReply = command.isAckable() || command.isResponseExpected();
-        this.unfinishedCommands.put(msgnumCur, (LynxRespondable)command);
-
+        this.unfinishedCommands.put(msgnumCur, (LynxRespondable) command);
+    
         // Send it on out!
         this.lynxUsbDevice.transmit(command);
-
+    
         // If the module isn't going to send something back to us in response, then it's finished
         if (!moduleWillReply)
-            {
+        {
             finishedWithMessage(command);
-            }
-         }
-
-    @Override public void retransmit(LynxMessage message) throws InterruptedException
-        {
-        RobotLog.vv(TAG, "retransmitting: mod=%d cmd=0x%02x msg#=%d ref#=%d ", this.getModuleAddress(), message.getCommandNumber(), message.getMessageNumber(), message.getReferenceNumber());
-        this.lynxUsbDevice.transmit(message);
         }
-
-    public void finishedWithMessage(LynxMessage message) // must be idempotent
+    }
+    
+        public void finishedWithMessage(LynxMessage message) // must be idempotent
         {
-        if (LynxUsbDeviceImpl.DEBUG_LOG_DATAGRAMS_FINISH) RobotLog.vv(TAG, "finishing mod=%d msg#=%d",
-                message.getModuleAddress(),
-                message.getMessageNumber());
-        //
-        int messageNumber = message.getMessageNumber();
-        this.unfinishedCommands.remove(messageNumber);
-        message.forgetSerialization();
-        }
-
-    public void pretendFinishExtantCommands() throws InterruptedException
-        {
-        for (LynxRespondable ackable : this.unfinishedCommands.values())
+            if (LynxUsbDeviceImpl.DEBUG_LOG_DATAGRAMS_FINISH)
             {
-            ackable.pretendFinish();
+                RobotLog.vv(TAG, "finishing mod=%d msg#=%d",
+                            message.getModuleAddress(),
+                            message.getMessageNumber());
+            }
+            //
+            int messageNumber = message.getMessageNumber();
+            this.unfinishedCommands.remove(messageNumber);
+            message.forgetSerialization();
+        }
+    
+        @Override
+        public void retransmit(LynxMessage message) throws InterruptedException
+        {
+            RobotLog.vv(TAG,
+                        "retransmitting: mod=%d cmd=0x%02x msg#=%d ref#=%d ",
+                        this.getModuleAddress(),
+                        message.getCommandNumber(),
+                        message.getMessageNumber(),
+                        message.getReferenceNumber());
+            this.lynxUsbDevice.transmit(message);
+        }
+    
+        public void pretendFinishExtantCommands() throws InterruptedException
+        {
+            for (LynxRespondable ackable : this.unfinishedCommands.values())
+            {
+                ackable.pretendFinish();
             }
         }
-
-    public void onIncomingDatagramReceived(LynxDatagram datagram)
-    // We've received a datagram from our module.
+    
+        public void onIncomingDatagramReceived(LynxDatagram datagram)
+        // We've received a datagram from our module.
         {
-        noteDatagramReceived();
-        // Reify the incoming command. First, what kind of command is that guy?
-        try {
-            MessageClassAndCtor pair = this.commandClasses.get(datagram.getCommandNumber());
-            if (pair != null)
+            noteDatagramReceived();
+            // Reify the incoming command. First, what kind of command is that guy?
+            try
+            {
+                MessageClassAndCtor pair = this.commandClasses.get(datagram.getCommandNumber());
+                if (pair != null)
                 {
-                // Is it the command itself, or a response to a command of that flavor?
-                if (datagram.isResponse())
+                    // Is it the command itself, or a response to a command of that flavor?
+                    if (datagram.isResponse())
                     {
-                    pair = responseClasses.get(pair.clazz);
+                        pair = responseClasses.get(pair.clazz);
                     }
                 if (pair != null)
                     {

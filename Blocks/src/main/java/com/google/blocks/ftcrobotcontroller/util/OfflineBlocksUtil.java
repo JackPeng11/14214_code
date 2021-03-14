@@ -16,66 +16,73 @@
 
 package com.google.blocks.ftcrobotcontroller.util;
 
-import static com.google.blocks.ftcrobotcontroller.util.ProjectsUtil.escapeSingleQuotes;
-
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.text.Html;
+
 import com.google.blocks.ftcrobotcontroller.hardware.HardwareItemMap;
 import com.google.blocks.ftcrobotcontroller.hardware.HardwareUtil;
+
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.robotserver.internal.webserver.AppThemeColors;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.robotserver.internal.webserver.AppThemeColors;
+
+import static com.google.blocks.ftcrobotcontroller.util.ProjectsUtil.escapeSingleQuotes;
 
 /**
  * A class that provides utility methods related to offline blocks editor.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class OfflineBlocksUtil {
-  public static InputStream fetchOfflineBlocksEditor() throws IOException {
-    String configName = HardwareUtil.getConfigurationName();
-    HardwareItemMap hardwareItemMap = HardwareItemMap.newHardwareItemMap();
-    AssetManager assetManager = AppUtil.getDefContext().getAssets();
-
-    Set<String> assetsToInclude = new HashSet<>();
-
-    assetsToInclude.add("js/split.min.js");
-
-    assetsToInclude.add("blocks/images.css");
-    for (String blocksImagesFile : assetManager.list("blocks/images")) {
-      assetsToInclude.add("blocks/images/" + blocksImagesFile);
-    }
-
-    assetsToInclude.add("css/blocks_offline.css");
-    assetsToInclude.add("css/blocks_common.css");
-
-    assetsToInclude.add("blockly/blockly_compressed.js");
-    for (String blocklyMediaFile : assetManager.list("blockly/media")) {
-      assetsToInclude.add("blockly/media/" + blocklyMediaFile);
-    }
-    assetsToInclude.add("blockly/msg/messages.js");
-    assetsToInclude.add("blockly/blocks_compressed.js");
-    assetsToInclude.add("blockly/javascript_compressed.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/lists.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/logic.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/loops.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/math.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/procedures.js");
-    assetsToInclude.add("ftcblockly/generators/ftcjava/text.js");
+public class OfflineBlocksUtil
+{
+    public static InputStream fetchOfflineBlocksEditor() throws IOException
+    {
+        String          configName      = HardwareUtil.getConfigurationName();
+        HardwareItemMap hardwareItemMap = HardwareItemMap.newHardwareItemMap();
+        AssetManager    assetManager    = AppUtil.getDefContext().getAssets();
+        
+        Set<String> assetsToInclude = new HashSet<>();
+        
+        assetsToInclude.add("js/split.min.js");
+        assetsToInclude.add("js/split.min.js.map");
+        
+        assetsToInclude.add("blocks/images.css");
+        for (String blocksImagesFile : assetManager.list("blocks/images"))
+        {
+            assetsToInclude.add("blocks/images/" + blocksImagesFile);
+        }
+        
+        assetsToInclude.add("css/blocks_offline.css");
+        assetsToInclude.add("css/blocks_common.css");
+        
+        assetsToInclude.add("blockly/blockly_compressed.js");
+        for (String blocklyMediaFile : assetManager.list("blockly/media"))
+        {
+            assetsToInclude.add("blockly/media/" + blocklyMediaFile);
+        }
+        assetsToInclude.add("blockly/msg/messages.js");
+        assetsToInclude.add("blockly/blocks_compressed.js");
+        assetsToInclude.add("blockly/javascript_compressed.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/lists.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/logic.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/loops.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/math.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/procedures.js");
+        assetsToInclude.add("ftcblockly/generators/ftcjava/text.js");
     assetsToInclude.add("ftcblockly/generators/ftcjava/variables.js");
 
     assetsToInclude.add("blocks/FtcBlocks_common.js");

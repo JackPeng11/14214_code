@@ -3,8 +3,6 @@ package org.firstinspires.ftc.robotcore.internal.network;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
@@ -22,25 +20,28 @@ import java.util.concurrent.TimeoutException;
 
 public final class ControlHubApChannelManager implements ApChannelManager
 {
-    private final static String TAG = "ControlHubApChannelManager";
-    private final static boolean DEBUG = false;
-    private final static ApChannel FACTORY_DEFAULT_AP_CHANNEL = ApChannel.AUTO_5_GHZ;
-
+    private final static String    TAG                        = "ControlHubApChannelManager";
+    private final static boolean   DEBUG                      = false;
+    private final static ApChannel FACTORY_DEFAULT_AP_CHANNEL = ApChannel.AUTO_2_4_GHZ;
+    
     private final ChannelResultReceiver channelResultReceiver = new ChannelResultReceiver();
-    private final Context context = AppUtil.getDefContext();
-    private EnumSet<ApChannel> supportedChannels = null;
-
+    private final Context               context               = AppUtil.getDefContext();
+    private       EnumSet<ApChannel>    supportedChannels     = null;
+    
     @Override
     public Set<ApChannel> getSupportedChannels()
     {
-        if (supportedChannels == null) {
+        if (supportedChannels == null)
+        {
             // We MUST do a copy instead of manipulating the original EnumSet
             EnumSet<ApChannel> result = EnumSet.copyOf(ApChannel.ALL_2_4_GHZ_CHANNELS);
-
+            
             result.add(ApChannel.AUTO_2_4_GHZ);
-            if (AndroidBoard.getInstance().supports5GhzAp()) {
+            if (AndroidBoard.getInstance().supports5GhzAp())
+            {
                 result.addAll(ApChannel.NON_DFS_5_GHZ_CHANNELS);
-                if (AndroidBoard.getInstance().supports5GhzAutoSelection()) {
+                if (AndroidBoard.getInstance().supports5GhzAutoSelection())
+                {
                     result.add(ApChannel.AUTO_5_GHZ);
                 }
             }
@@ -48,26 +49,32 @@ public final class ControlHubApChannelManager implements ApChannelManager
         }
         return supportedChannels;
     }
-
+    
     /**
      * Returns the current AP channel.
-     *
-     * Do not call this on the main thread, as that is where we receive the channel from the AP service.
      */
     @Override
-    public ApChannel getCurrentChannel()
+    public synchronized ApChannel getCurrentChannel()
     {
-        if (AndroidBoard.getInstance().supportsGetChannelInfoIntent()) {
-            if (DEBUG) RobotLog.vv(TAG, "Sending broadcast to get current channel");
+        if (AndroidBoard.getInstance().supportsGetChannelInfoIntent())
+        {
+            if (DEBUG)
+            {
+                RobotLog.vv(TAG, "Sending broadcast to get current channel");
+            }
             Intent getCurrentChannelInfoIntent = new Intent(Intents.ACTION_FTC_AP_GET_CURRENT_CHANNEL_INFO);
-            getCurrentChannelInfoIntent.putExtra(Intents.EXTRA_RESULT_RECEIVER, AppUtil.wrapResultReceiverForIpc(channelResultReceiver));
+            getCurrentChannelInfoIntent.putExtra(Intents.EXTRA_RESULT_RECEIVER,
+                                                 AppUtil.wrapResultReceiverForIpc(channelResultReceiver));
             AppUtil.getDefContext().sendBroadcast(getCurrentChannelInfoIntent);
-            try {
-                return channelResultReceiver.awaitResult(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
+            try
+            {
+                return channelResultReceiver.awaitResult(45, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e)
+            {
                 RobotLog.ee(TAG, "Thread interrupted while getting current channel from AP service");
                 Thread.currentThread().interrupt();
-            } catch (TimeoutException e) {
+            } catch (TimeoutException e)
+            {
                 RobotLog.ee(TAG, "Timeout while getting current channel from AP service");
             }
         }
@@ -127,7 +134,7 @@ public final class ControlHubApChannelManager implements ApChannelManager
 
         public ChannelResultReceiver()
         {
-            super(3, TAG, new Handler(Looper.getMainLooper()));
+            super(3, TAG, CallbackLooper.getDefault().getHandler());
         }
 
         @Override

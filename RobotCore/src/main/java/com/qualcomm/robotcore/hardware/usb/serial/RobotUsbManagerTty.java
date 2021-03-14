@@ -32,8 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.qualcomm.robotcore.hardware.usb.serial;
 
-import android.content.Context;
-
 import com.qualcomm.robotcore.R;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DeviceManager;
@@ -41,11 +39,11 @@ import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
 import com.qualcomm.robotcore.hardware.usb.RobotUsbDeviceImplBase;
 import com.qualcomm.robotcore.hardware.usb.RobotUsbManager;
+import com.qualcomm.robotcore.util.SerialNumber;
 
 import org.firstinspires.ftc.robotcore.internal.hardware.android.AndroidBoard;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.robotcore.internal.usb.exception.RobotUsbException;
-import com.qualcomm.robotcore.util.SerialNumber;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,9 +116,9 @@ public class RobotUsbManagerTty implements RobotUsbManager
                     try { deviceTTY.setBaudRate(LynxConstants.SERIAL_MODULE_BAUD_RATE); } catch (RobotUsbException e) {/*ignored*/}
                     return deviceTTY;
                     }
-                throw new RobotCoreException(TAG, "%s is already open: unable to open second time", serialNumber);
+                    throw new RobotCoreException("%s is already open: unable to open second time", serialNumber);
                 }
-            throw new RobotCoreException(TAG, "%s not found", serialNumber);
+                throw new RobotCoreException("TTY for %s not found", serialNumber);
             }
         }
     }

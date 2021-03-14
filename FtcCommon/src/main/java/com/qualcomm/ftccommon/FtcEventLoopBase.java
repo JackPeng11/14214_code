@@ -94,38 +94,36 @@ package com.qualcomm.ftccommon;
 
 import android.app.Activity;
 import android.graphics.Color;
+
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 
 import com.qualcomm.ftccommon.configuration.FtcConfigurationActivity;
 import com.qualcomm.ftccommon.configuration.RobotConfigFile;
 import com.qualcomm.ftccommon.configuration.RobotConfigFileManager;
-import com.qualcomm.hardware.lynx.EmbeddedControlHubModule;
-import com.qualcomm.robotcore.hardware.Blinker;
-import com.qualcomm.robotcore.hardware.USBAccessibleLynxModule;
-import com.qualcomm.robotcore.hardware.VisuallyIdentifiableHardwareDevice;
-import com.qualcomm.robotcore.hardware.ScannedDevices;
 import com.qualcomm.ftccommon.configuration.USBScanManager;
 import com.qualcomm.hardware.HardwareFactory;
+import com.qualcomm.hardware.lynx.EmbeddedControlHubModule;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxNackException;
 import com.qualcomm.hardware.lynx.LynxUsbDevice;
-import com.qualcomm.hardware.lynx.LynxUsbDeviceImpl;
 import com.qualcomm.robotcore.eventloop.EventLoop;
 import com.qualcomm.robotcore.eventloop.EventLoopManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
 import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.DeviceManager;
 import com.qualcomm.robotcore.hardware.LynxModuleMeta;
 import com.qualcomm.robotcore.hardware.LynxModuleMetaList;
+import com.qualcomm.robotcore.hardware.ScannedDevices;
+import com.qualcomm.robotcore.hardware.USBAccessibleLynxModule;
+import com.qualcomm.robotcore.hardware.VisuallyIdentifiableHardwareDevice;
+import com.qualcomm.robotcore.hardware.configuration.ConfigurationTypeManager;
 import com.qualcomm.robotcore.hardware.configuration.ControllerConfiguration;
 import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.configuration.ReadXMLFileHandler;
-import com.qualcomm.robotcore.hardware.configuration.ConfigurationTypeManager;
 import com.qualcomm.robotcore.hardware.configuration.WriteXMLFileHandler;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
 import com.qualcomm.robotcore.robocol.Command;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.SerialNumber;
 import com.qualcomm.robotcore.util.ThreadPool;
@@ -146,8 +144,6 @@ import org.firstinspires.ftc.robotcore.internal.network.WifiDirectGroupName;
 import org.firstinspires.ftc.robotcore.internal.network.WifiDirectPersistentGroupManager;
 import org.firstinspires.ftc.robotcore.internal.opmode.OnBotJavaBuildLocker;
 import org.firstinspires.ftc.robotcore.internal.opmode.RegisteredOpModes;
-import org.firstinspires.ftc.robotcore.internal.stellaris.FlashLoaderManager;
-import org.firstinspires.ftc.robotcore.internal.stellaris.FlashLoaderProtocolException;
 import org.firstinspires.ftc.robotcore.internal.system.AppAliveNotifier;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.robotcore.internal.system.Assert;
@@ -164,7 +160,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 /**
@@ -190,7 +185,6 @@ public abstract class FtcEventLoopBase implements EventLoop
     protected boolean runningOnDriverStation = false;
     protected USBScanManager usbScanManager;
     protected final OpModeRegister userOpmodeRegister;
-    protected final AtomicBoolean firmwareUpdateInProgress;
 
     protected final RegisteredOpModes registeredOpModes;
     private AppUtil.DialogContext dialogContext; //added for OpenRC
@@ -206,7 +200,6 @@ public abstract class FtcEventLoopBase implements EventLoop
         this.activityContext = activityContext;
         this.robotCfgFileMgr = new RobotConfigFileManager(activityContext);
         this.ftcEventLoopHandler = new FtcEventLoopHandler(hardwareFactory, callback, activityContext);
-        this.firmwareUpdateInProgress = new AtomicBoolean(false);
         this.usbScanManager = null;
         }
 
@@ -233,6 +226,7 @@ public abstract class FtcEventLoopBase implements EventLoop
             this.usbScanManager.stopExecutorService();
             this.usbScanManager = null;
             }
+            ftcEventLoopHandler.close();
         }
 
     //----------------------------------------------------------------------------------------------
@@ -645,15 +639,6 @@ public abstract class FtcEventLoopBase implements EventLoop
         result.success = false;
         result.originatorId = requestId;
 
-        boolean firmwareUpdateAllowed = firmwareUpdateInProgress.compareAndSet(false, true);
-        if (!firmwareUpdateAllowed)
-            {
-            result.errorMessage = AppUtil.getDefContext().getString(R.string.lynxFirmwareUpdateAlreadyInProgress);
-            RobotLog.vv(TAG, "Cannot update firmware: a firmware update is already in progress");
-            return result;
-            }
-        RobotLog.vv(TAG, "updateLynxFirmware(%s, %s)", serialNumber, image.getName());
-
         final boolean updatingControlHub = serialNumber.isEmbedded();
         Consumer<ProgressParameters> progressConsumer = new Consumer<ProgressParameters>()
             {
@@ -688,41 +673,11 @@ public abstract class FtcEventLoopBase implements EventLoop
             if (lynxUsbDevice != null)
                 {
                 try {
-                    byte[] firmwareImage = ReadWriteFile.readBytes(image);
-                    if (firmwareImage.length > 0)
-                        {
-                        RobotLog.vv(TAG, "disengaging lynx usb device %s", lynxUsbDevice.getSerialNumber());
-                        lynxUsbDevice.disengage();
-                        try {
-                            // Try the update few times, in the hope of mitigating transient errors. Each time
-                            // we reset the hub and toggle it to enter programming mode, so it will at least
-                            // pay attention to us and try to cooperate, even after a failed update.
-                            int cRetryFirmwareUpdate = 2;
-                            for (int i = 0; i < cRetryFirmwareUpdate; i++)
-                                {
-                                RobotLog.vv(TAG, "trying firmware update: count=%d", i);
-                                if (updateFirmwareOnce(lynxUsbDevice, firmwareImage, serialNumber, progressConsumer))
-                                    {
-                                    result.success = true;
-                                    break;
-                                    }
-                                }
-                            }
-                        finally
-                            {
-                            RobotLog.vv(TAG, "reengaging lynx usb device %s", lynxUsbDevice.getSerialNumber());
-                            lynxUsbDevice.engage();
-                            }
-                        }
-                    else
-                        {
-                        RobotLog.ee(TAG, "firmware image file unexpectedly empty");
-                        }
+                    result = lynxUsbDevice.updateFirmware(image, requestId, progressConsumer);
                     }
                 finally
                     {
                     lynxUsbDevice.close();
-                    firmwareUpdateInProgress.set(false);
                     }
                 }
             else
@@ -730,70 +685,11 @@ public abstract class FtcEventLoopBase implements EventLoop
                 RobotLog.ee(TAG, "unable to obtain lynx usb device for fw update: %s", serialNumber);
                 }
             }
-        catch (RuntimeException e)
-            {
-            RobotLog.ee(TAG, e, "RuntimeException in updateLynxFirmware()");
-            }
         finally
             {
             AppUtil.getInstance().dismissProgress(UILocation.BOTH);
             }
         RobotLog.vv(TAG, "updateLynxFirmware(%s, %s): result=%s", serialNumber, image.getName(), result.serialize());
-        return result;
-        }
-
-    protected boolean updateFirmwareOnce(final LynxUsbDevice lynxUsbDevice, byte[] firmwareImage, SerialNumber serialNumber, Consumer<ProgressParameters> fractionCompleteFeedback)
-        {
-        boolean success = true;
-        if (enterFirmwareUpdateMode(lynxUsbDevice.getRobotUsbDevice()))
-            {
-            FlashLoaderManager manager = new FlashLoaderManager(lynxUsbDevice.getRobotUsbDevice(), firmwareImage);
-            try {
-                manager.updateFirmware(fractionCompleteFeedback);
-                }
-            catch (InterruptedException e)
-                {
-                success = false;
-                Thread.currentThread().interrupt();
-                RobotLog.ee(TAG, "interrupt while updating firmware: serial=%s", serialNumber);
-                }
-            catch (FlashLoaderProtocolException e)
-                {
-                success = false;
-                RobotLog.ee(TAG, e, "exception while updating firmware: serial=%s", serialNumber);
-                }
-            }
-        else
-            {
-            RobotLog.ee(TAG, "failed to enter firmware update mode");
-            success = false;
-            }
-        return success;
-        }
-
-    protected boolean enterFirmwareUpdateMode(RobotUsbDevice robotUsbDevice)
-        {
-        boolean result = false;
-        if (LynxConstants.isEmbeddedSerialNumber(robotUsbDevice.getSerialNumber()))
-            {
-            RobotLog.vv(TAG, "putting embedded lynx into firmware update mode");
-            result = LynxUsbDeviceImpl.enterFirmwareUpdateModeControlHub();
-            }
-        else
-            {
-            RobotLog.vv(TAG, "putting lynx(serial=%s) into firmware update mode", robotUsbDevice.getSerialNumber());
-            result = LynxUsbDeviceImpl.enterFirmwareUpdateModeUSB(robotUsbDevice);
-            }
-
-        // Sleep a bit to give the Lynx module time to enter bootloader. Actual time spent is a wild guess.
-        try {
-            Thread.sleep(100);
-            }
-        catch (InterruptedException e)
-            {
-            Thread.currentThread().interrupt();
-            }
-
         return result;
         }
 

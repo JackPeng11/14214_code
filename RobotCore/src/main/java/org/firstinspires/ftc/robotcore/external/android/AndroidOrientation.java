@@ -16,8 +16,6 @@
 
 package org.firstinspires.ftc.robotcore.external.android;
 
-import static java.lang.Math.PI;
-
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -26,108 +24,136 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.view.Surface;
 import android.view.WindowManager;
+
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import static java.lang.Math.PI;
 
 /**
  * A class that provides access to the Android sensors for Orientation.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class AndroidOrientation implements SensorEventListener {
-  private volatile boolean listening;
-  private volatile long timestampAcceleration;
-  private volatile long timestampMagneticField;
-  private volatile double azimuth; // in radians
-  private volatile double pitch;   // in radians
-  private volatile double roll;    // in radians
-  private volatile AngleUnit angleUnit = AngleUnit.RADIANS;
-
-  private final float[] acceleration = new float[3];
-  private final float[] magneticField = new float[3];
-  private final float[] rotationMatrix = new float[9];
-  private final float[] inclinationMatrix = new float[9];
-  private final float[] orientation = new float[3];
-
-  // SensorEventListener methods
-
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-  }
-
-  @Override
-  public void onSensorChanged(SensorEvent sensorEvent) {
-    int eventType = sensorEvent.sensor.getType();
-    if (eventType == Sensor.TYPE_ACCELEROMETER) {
-      timestampAcceleration = sensorEvent.timestamp;
-      acceleration[0] = sensorEvent.values[0];
-      acceleration[1] = sensorEvent.values[1];
-      acceleration[2] = sensorEvent.values[2];
-    } else if (eventType == Sensor.TYPE_MAGNETIC_FIELD) {
-      timestampMagneticField = sensorEvent.timestamp;
-      magneticField[0] = sensorEvent.values[0];
-      magneticField[1] = sensorEvent.values[1];
-      magneticField[2] = sensorEvent.values[2];
+public class AndroidOrientation implements SensorEventListener
+{
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private final    WindowManager windowManager     = (WindowManager) AppUtil.getDefContext()
+                                                                              .getSystemService(Context.WINDOW_SERVICE);
+    @SuppressWarnings ("ConstantConditions")
+    @NonNull
+    private final    SensorManager sensorManager     = (SensorManager) AppUtil.getDefContext()
+                                                                              .getSystemService(Context.SENSOR_SERVICE);
+    private final    float[]       acceleration      = new float[3];
+    private final    float[]       magneticField     = new float[3];
+    private final    float[]       rotationMatrix    = new float[9];
+    private final    float[]       inclinationMatrix = new float[9];
+    private final    float[]       orientation       = new float[3];
+    private volatile boolean       listening;
+    private volatile long          timestampAcceleration;
+    private volatile long          timestampMagneticField;
+    private volatile double        azimuth; // in radians
+    private volatile double        pitch;   // in radians
+    private volatile AngleUnit     angleUnit         = AngleUnit.RADIANS;
+    private volatile double        roll;    // in radians
+    
+    // SensorEventListener methods
+    
+    /**
+     * Computes the modulo relationship.  This is not the same as
+     * Java's remainder (%) operation, which always returns a
+     * value with the same sign as the dividend or 0.
+     *
+     * @param dividend number to divide
+     * @param quotient number to divide by
+     * @return the number r with the smallest absolute value such
+     * that sign(r) == sign(quotient) and there exists an
+     * integer k such that k * quotient + r = dividend
+     */
+    private static double mod(double dividend, double quotient)
+    {
+        double result = dividend % quotient;
+        if (result == 0 || Math.signum(dividend) == Math.signum(quotient))
+        {
+            return result;
+        }
+        else
+        {
+            return result + quotient;
+        }
     }
-    if (timestampAcceleration != 0 && timestampMagneticField != 0) {
-      SensorManager.getRotationMatrix(
-          rotationMatrix, inclinationMatrix, acceleration, magneticField);
-      SensorManager.getOrientation(rotationMatrix, orientation);
-      azimuth = normalizeAzimuth(orientation[0]);
-      pitch = normalizePitch(orientation[1]);
-      // Sign change for roll is for compatibility with App Inventor.
-      roll = normalizeRoll(-orientation[2]);
-
-      // Adjust pitch and roll for phone rotation (e.g., landscape vs portrait).
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      int rotation = ((WindowManager) activity.getSystemService(Context.WINDOW_SERVICE))
-          .getDefaultDisplay().getRotation();
-      if (rotation == Surface.ROTATION_90) {
-        // Phone is turned 90 degrees counter-clockwise.
-        double temp = -pitch;
-        pitch = -roll;
-        roll = temp;
-      } else if (rotation == Surface.ROTATION_180) {
-        // Phone is rotated 180 degrees.
-        roll = -roll;
-      } else if (rotation == Surface.ROTATION_270) {
-        // Phone is turned 90 degrees clockwise.
-        double temp = pitch;
-        pitch = roll;
-        roll = temp;
-      }
+    
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy)
+    {
     }
-  }
-
-  /**
-   * Computes the modulo relationship.  This is not the same as
-   * Java's remainder (%) operation, which always returns a
-   * value with the same sign as the dividend or 0.
-   *
-   * @param dividend number to divide
-   * @param quotient number to divide by
-   * @return the number r with the smallest absolute value such
-   *         that sign(r) == sign(quotient) and there exists an
-   *         integer k such that k * quotient + r = dividend
-   */
-  private static double mod(double dividend, double quotient) {
-    double result = dividend % quotient;
-    if (result == 0 || Math.signum(dividend) == Math.signum(quotient)) {
-      return result;
-    } else {
-      return result + quotient;
+    
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent)
+    {
+        int eventType = sensorEvent.sensor.getType();
+        if (eventType == Sensor.TYPE_ACCELEROMETER)
+        {
+            timestampAcceleration = sensorEvent.timestamp;
+            acceleration[0] = sensorEvent.values[0];
+            acceleration[1] = sensorEvent.values[1];
+            acceleration[2] = sensorEvent.values[2];
+        }
+        else if (eventType == Sensor.TYPE_MAGNETIC_FIELD)
+        {
+            timestampMagneticField = sensorEvent.timestamp;
+            magneticField[0] = sensorEvent.values[0];
+            magneticField[1] = sensorEvent.values[1];
+            magneticField[2] = sensorEvent.values[2];
+        }
+        if (timestampAcceleration != 0 && timestampMagneticField != 0)
+        {
+            SensorManager.getRotationMatrix(
+                    rotationMatrix, inclinationMatrix, acceleration, magneticField);
+            SensorManager.getOrientation(rotationMatrix, orientation);
+            azimuth = normalizeAzimuth(orientation[0]);
+            pitch = normalizePitch(orientation[1]);
+            // Sign change for roll is for compatibility with App Inventor.
+            roll = normalizeRoll(-orientation[2]);
+            
+            // Adjust pitch and roll for phone rotation (e.g., landscape vs portrait).
+            Activity activity = AppUtil.getInstance().getRootActivity();
+            int      rotation = windowManager.getDefaultDisplay().getRotation();
+            if (rotation == Surface.ROTATION_90)
+            {
+                // Phone is turned 90 degrees counter-clockwise.
+                double temp = -pitch;
+                pitch = -roll;
+                roll = temp;
+            }
+            else if (rotation == Surface.ROTATION_180)
+            {
+                // Phone is rotated 180 degrees.
+                roll = -roll;
+            }
+            else if (rotation == Surface.ROTATION_270)
+            {
+                // Phone is turned 90 degrees clockwise.
+                double temp = pitch;
+                pitch = roll;
+                roll = temp;
+            }
+        }
     }
-  }
-
-  /**
-   * Normalizes azimuth to be in the range [0, 2*PI).
-   *
-   * @param azimuth an angle in radians, likely to be in (-2*PI, +2*PI)
-   * @return an equivalent angle in the range [0, 2*PI)
-   */
-  private static double normalizeAzimuth(double azimuth) {
-    return mod(azimuth, 2*PI);
-  }
+    
+    /**
+     * Normalizes azimuth to be in the range [0, 2*PI).
+     *
+     * @param azimuth an angle in radians, likely to be in (-2*PI, +2*PI)
+     * @return an equivalent angle in the range [0, 2*PI)
+     */
+    private static double normalizeAzimuth(double azimuth)
+    {
+        return mod(azimuth, 2 * PI);
+    }
 
   /**
    * Normalizes pitch to be in the range [-PI, +PI).
@@ -261,8 +287,6 @@ public class AndroidOrientation implements SensorEventListener {
    * Returns true if the Android device has the sensors required for orientation.
    */
   public boolean isAvailable() {
-    Activity activity = AppUtil.getInstance().getRootActivity();
-    SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
     return !sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty()
         && !sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD).isEmpty();
   }
@@ -272,8 +296,6 @@ public class AndroidOrientation implements SensorEventListener {
    */
   public void startListening() {
     if (!listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
       sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
       Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -287,8 +309,6 @@ public class AndroidOrientation implements SensorEventListener {
    */
   public void stopListening() {
     if (listening) {
-      Activity activity = AppUtil.getInstance().getRootActivity();
-      SensorManager sensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
       sensorManager.unregisterListener(this);
       listening = false;
       timestampAcceleration = 0;

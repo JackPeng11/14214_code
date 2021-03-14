@@ -30,6 +30,7 @@
 
 package com.qualcomm.robotcore.wifi;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -45,78 +46,87 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.net.InetAddress;
 
-public abstract class NetworkConnection {
-
-  private final static int GHZ_24_BASE_FREQ = 2407;
-  private final static int GHZ_50_BASE_FREQ = 5000;
-
-  public enum NetworkEvent {
-    DISCOVERING_PEERS,
-    PEERS_AVAILABLE,
-    GROUP_CREATED,
-    CONNECTING,
-    CONNECTED_AS_PEER,
-    CONNECTED_AS_GROUP_OWNER,
-    DISCONNECTED,
-    CONNECTION_INFO_AVAILABLE,
-    AP_CREATED,
-    ERROR,
-    UNKNOWN
-  }
-
-  public enum ConnectStatus {
-    NOT_CONNECTED,
-    CONNECTING,
-    CONNECTED,
-    GROUP_OWNER,
-    ERROR
-  }
-
-  public interface NetworkConnectionCallback {
-    CallbackResult onNetworkConnectionEvent(NetworkEvent event);
-  }
-
-  protected NetworkEvent lastEvent = null;
-  protected NetworkConnectionCallback callback = null;
-  protected final Object callbackLock = new Object();
-  protected Context context;
-
-  public NetworkConnection(Context context) {
-    this.context = context == null ? AppUtil.getDefContext() : context;
-  }
-
-  public abstract NetworkType getNetworkType();
-
-  public abstract void enable();
-  public abstract void disable();
-
-  public abstract void discoverPotentialConnections();
-
-  public abstract void cancelPotentialConnections();
-
-  public abstract void createConnection();
-
-  public abstract void connect(String deviceAddress);
-
-  public abstract void connect(String connectionName, String connectionPassword);
-
-  public abstract void detectWifiReset();
-
-  public abstract InetAddress getConnectionOwnerAddress();
-
-  public abstract String getConnectionOwnerName();
-
-  public abstract String getConnectionOwnerMacAddress();
-
-  public abstract boolean isConnected();
-
-  public abstract String getDeviceName();
-
-  public abstract String getInfo();
-
-  public abstract String getFailureReason();
-
-  public abstract String getPassphrase();
+public abstract class NetworkConnection
+{
+    
+    private final static int GHZ_24_BASE_FREQ = 2407;
+    private final static int GHZ_50_BASE_FREQ = 5000;
+    
+    protected final Object                    callbackLock = new Object();
+    @SuppressLint ("WifiManagerLeak")
+    protected final WifiManager               wifiManager  = (WifiManager) AppUtil.getDefContext().getSystemService(
+            Context.WIFI_SERVICE);
+    protected       NetworkEvent              lastEvent    = null;
+    protected       NetworkConnectionCallback callback     = null;
+    protected       Context                   context;
+    
+    public NetworkConnection(Context context)
+    {
+        this.context = context == null ? AppUtil.getDefContext() : context;
+    }
+    
+    public abstract NetworkType getNetworkType();
+    
+    public abstract void enable();
+    
+    public abstract void disable();
+    
+    public abstract void discoverPotentialConnections();
+    
+    public abstract void cancelPotentialConnections();
+    
+    public abstract void createConnection();
+    
+    public abstract void connect(String deviceAddress);
+    
+    public abstract void connect(String connectionName, String connectionPassword);
+    
+    public abstract void detectWifiReset();
+    
+    public abstract InetAddress getConnectionOwnerAddress();
+    
+    public abstract String getConnectionOwnerName();
+    
+    public abstract String getConnectionOwnerMacAddress();
+    
+    public enum NetworkEvent
+    {
+        DISCOVERING_PEERS,
+        PEERS_AVAILABLE,
+        GROUP_CREATED,
+        CONNECTING,
+        CONNECTED_AS_PEER,
+        CONNECTED_AS_GROUP_OWNER,
+        DISCONNECTED,
+        CONNECTION_INFO_AVAILABLE,
+        AP_CREATED,
+        ERROR,
+        UNKNOWN
+    }
+    
+    public enum ConnectStatus
+    {
+        NOT_CONNECTED,
+        CONNECTING,
+        CONNECTED,
+        GROUP_OWNER,
+        ERROR
+    }
+    
+    public interface NetworkConnectionCallback
+    {
+        CallbackResult onNetworkConnectionEvent(NetworkEvent event);
+    }
+    
+    public abstract boolean isConnected();
+    
+    public abstract String getDeviceName();
+    
+    public abstract String getInfo();
+    
+    public abstract String getFailureReason();
+    
+    public abstract String getPassphrase();
 
   public abstract WifiDirectAssistant.ConnectStatus getConnectStatus();
 
@@ -148,7 +158,6 @@ public abstract class NetworkConnection {
   }
 
   public int getWifiChannel() {
-    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     WifiInfo info = wifiManager.getConnectionInfo();
     int freq;
     freq = info.getFrequency();

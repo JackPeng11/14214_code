@@ -69,26 +69,34 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@link UvcContext} is the Java manifestation of a native uvc_context_t, together with
  * some additional Java-level state that should be maintained throughout a UVC session.
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings ("WeakerAccess")
 public class UvcContext extends NativeObject
-    {
+{
     //----------------------------------------------------------------------------------------------
     // State
     //----------------------------------------------------------------------------------------------
-
+    
     public static final String TAG = UvcContext.class.getSimpleName();
-    public String getTag() { return TAG; }
-    public static boolean DEBUG_RS = false; // test what we'll ship, even in DEBUG app builds
-    protected static final AtomicInteger instanceCounter = new AtomicInteger(0);
-
-    protected final int instanceNumber = instanceCounter.getAndIncrement();
-    protected final Lock renderscriptAccessLock = new ReentrantLock();
-    protected RenderScript renderScript = null;
-    protected final RenderScript.ContextType renderScriptContextType =
+    
+    protected static final UsbManager usbManager = (UsbManager) AppUtil.getDefContext().getSystemService(
+            Context.USB_SERVICE);
+    
+    protected static final AtomicInteger            instanceCounter         = new AtomicInteger(0);
+    public static          boolean                  DEBUG_RS                = false; // test what we'll ship, even in
+    // DEBUG app builds
+    protected final        int                      instanceNumber          = instanceCounter.getAndIncrement();
+    protected final        Lock                     renderscriptAccessLock  = new ReentrantLock();
+    protected final        RenderScript.ContextType renderScriptContextType =
             DEBUG_RS
-                ? RenderScript.ContextType.DEBUG
-                : RenderScript.ContextType.NORMAL;
-
+                    ? RenderScript.ContextType.DEBUG
+                    : RenderScript.ContextType.NORMAL;
+    protected              RenderScript             renderScript            = null;
+    
+    public String getTag()
+    {
+        return TAG;
+    }
+    
     /* From the NDK:
      *  enum RSInitFlags {
      *      RS_INIT_SYNCHRONOUS = 1,        ///< All RenderScript calls will be synchronous. May reduce latency.
@@ -348,7 +356,6 @@ public class UvcContext extends NativeObject
             {
             final ArrayList<UvcDevice> result = new ArrayList<>();
 
-            final UsbManager usbManager = (UsbManager) AppUtil.getDefContext().getSystemService(Context.USB_SERVICE);
             for (final UsbDevice usbDevice : usbManager.getDeviceList().values())
                 {
                 try {

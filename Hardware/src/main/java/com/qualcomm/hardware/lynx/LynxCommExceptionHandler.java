@@ -75,29 +75,35 @@ public class LynxCommExceptionHandler
     /** Returns true if command was supported (so: exception was something else) or false if the exception indicated that the command wasn't supported */
     protected boolean handleException(Exception e)
         {
-        boolean commandIsSupported = true;
-        if (e instanceof InterruptedException)
-            handleSpecificException((InterruptedException)e);
-        if (e instanceof OpModeManagerImpl.ForceStopException) //Rethrow
+            boolean commandIsSupported = true;
+            if (e instanceof InterruptedException)
             {
-            throw (OpModeManagerImpl.ForceStopException)e;
+                handleSpecificException((InterruptedException) e);
             }
-        else if (e instanceof LynxNackException)
+            else if (e instanceof OpModeManagerImpl.ForceStopException) //Rethrow
             {
-            LynxNackException nackException = (LynxNackException)e;
-            handleSpecificException(nackException);
-            if (nackException.getNack().getNackReasonCode().isUnsupportedReason())
+                throw (OpModeManagerImpl.ForceStopException) e;
+            }
+            else if (e instanceof LynxNackException)
+            {
+                LynxNackException nackException = (LynxNackException) e;
+                handleSpecificException(nackException);
+                if (nackException.getNack().getNackReasonCode().isUnsupportedReason())
                 {
-                commandIsSupported = false;
+                    commandIsSupported = false;
                 }
             }
-        else if (e instanceof TargetPositionNotSetException) // Must be checked before RuntimeException
-            handleSpecificException((TargetPositionNotSetException)e);
-        else if (e instanceof RuntimeException)
-            handleSpecificException((RuntimeException)e);
-        else
+            else if (e instanceof TargetPositionNotSetException) // Must be checked before RuntimeException
             {
-            RobotLog.ee(getTag(), e, "unexpected exception thrown during lynx communication");
+                handleSpecificException((TargetPositionNotSetException) e);
+            }
+            else if (e instanceof RuntimeException)
+            {
+                handleSpecificException((RuntimeException) e);
+            }
+            else
+            {
+                RobotLog.ee(getTag(), e, "unexpected exception thrown during lynx communication");
             }
         return commandIsSupported;
         }

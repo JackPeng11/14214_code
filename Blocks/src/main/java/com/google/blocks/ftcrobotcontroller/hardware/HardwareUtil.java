@@ -16,15 +16,11 @@
 
 package com.google.blocks.ftcrobotcontroller.hardware;
 
-import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.CURRENT_GAME_NAME;
-import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.TFOD_CURRENT_GAME_BLOCKS_FIRST_NAME;
-import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.VUFORIA_CURRENT_GAME_BLOCKS_FIRST_NAME;
-import static com.google.blocks.ftcrobotcontroller.util.ProjectsUtil.escapeSingleQuotes;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+
 import com.google.blocks.ftcrobotcontroller.util.AvailableTtsLocalesProvider;
 import com.google.blocks.ftcrobotcontroller.util.FileUtil;
 import com.google.blocks.ftcrobotcontroller.util.Identifier;
@@ -42,6 +38,21 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.DeviceConfiguration;
 import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.robotcore.external.ExportToBlocks;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.android.AndroidSoundPool;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaCurrentGame;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaRoverRuckus;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
+import org.firstinspires.ftc.robotcore.external.tfod.TfodCurrentGame;
+import org.firstinspires.ftc.robotcore.external.tfod.TfodRoverRuckus;
+import org.firstinspires.ftc.robotcore.external.tfod.TfodSkyStone;
+import org.firstinspires.ftc.robotcore.internal.opmode.BlocksClassFilter;
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
+import org.firstinspires.ftc.robotcore.internal.opmode.RegisteredOpModes;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -59,182 +70,175 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.ExportToBlocks;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.android.AndroidSoundPool;
-import org.firstinspires.ftc.robotcore.external.android.AndroidTextToSpeech;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaCurrentGame;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaRoverRuckus;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
-import org.firstinspires.ftc.robotcore.external.tfod.TfodCurrentGame;
-import org.firstinspires.ftc.robotcore.external.tfod.TfodRoverRuckus;
-import org.firstinspires.ftc.robotcore.external.tfod.TfodSkyStone;
-import org.firstinspires.ftc.robotcore.internal.opmode.BlocksClassFilter;
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
-import org.firstinspires.ftc.robotcore.internal.opmode.RegisteredOpModes;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.CURRENT_GAME_NAME;
+import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.TFOD_CURRENT_GAME_BLOCKS_FIRST_NAME;
+import static com.google.blocks.ftcrobotcontroller.util.CurrentGame.VUFORIA_CURRENT_GAME_BLOCKS_FIRST_NAME;
+import static com.google.blocks.ftcrobotcontroller.util.ProjectsUtil.escapeSingleQuotes;
 
 /**
  * A class that provides utility methods related to hardware.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
-public class HardwareUtil {
-  private static final String DC_MOTOR_EX_CATEGORY_NAME = "Extended";
-  private static final String DC_MOTOR_DUAL_CATEGORY_NAME = "Dual";
-  private static final String GAMEPAD_CATEGORY_NAME = "Gamepad"; // see toolbox/gamepad.xml
-  private static final String LINEAR_OP_MODE_CATEGORY_NAME = "LinearOpMode"; // see toolbox/linear_op_mode.xml
-  private static final String COLOR_CATEGORY_NAME = "Color"; // see toolbox/utilities.xml
-  private static final String ELAPSED_TIME_CATEGORY_NAME = "ElapsedTime"; // see toolbox/utilities.xml
-
-  public static final String SWITCHABLE_CAMERA_NAME = "Switchable Camera";
-
-  public enum Capability {
-    CAMERA("camera"),
-    WEBCAM("webcam"),
-    SWITCHABLE_CAMERA("switchableCamera"),
-    VUFORIA("vuforia"),
-    TFOD("tfod");
-
-    private final String placeholderType;
-
-    Capability(String placeholderType) {
-      this.placeholderType = placeholderType;
-    }
-
-    static Capability fromPlaceholderType(String type) {
-      for (Capability capability : Capability.values()) {
-        if (capability.placeholderType.equals(type)) {
-          return capability;
+public class HardwareUtil
+{
+    public static final  String                          SWITCHABLE_CAMERA_NAME       = "Switchable Camera";
+    private static final SensorManager                   sensorManager                =
+            (SensorManager) AppUtil.getDefContext()
+                                   .getSystemService(
+                                           Context.SENSOR_SERVICE);
+    private static final String                          DC_MOTOR_EX_CATEGORY_NAME    = "Extended";
+    private static final String                          DC_MOTOR_DUAL_CATEGORY_NAME  = "Dual";
+    private static final String                          GAMEPAD_CATEGORY_NAME        = "Gamepad"; // see
+    // toolbox/gamepad.xml
+    private static final String                          LINEAR_OP_MODE_CATEGORY_NAME = "LinearOpMode"; // see
+    // toolbox/linear_op_mode.xml
+    private static final String                          COLOR_CATEGORY_NAME          = "Color"; // see
+    // toolbox/utilities.xml
+    private static final String                          ELAPSED_TIME_CATEGORY_NAME   = "ElapsedTime"; // see
+    // toolbox/utilities.xml
+    private static final Set<String>                     reservedWordsForFtcJava      = buildReservedWordsForFtcJava();
+    /**
+     * A {@link Map} from xmlTag to List of {@link HardwareType}.
+     */
+    private static final Map<String, List<HardwareType>> XML_TAG_TO_HARDWARE_TYPES    =
+            new HashMap<String, List<HardwareType>>();
+    
+    static
+    {
+        for (HardwareType hardwareType : HardwareType.values())
+        {
+            for (String xmlTag : hardwareType.xmlTags)
+            {
+                List<HardwareType> list = (List<HardwareType>) XML_TAG_TO_HARDWARE_TYPES.get(xmlTag);
+                if (list == null)
+                {
+                    list = new ArrayList<HardwareType>();
+                    XML_TAG_TO_HARDWARE_TYPES.put(xmlTag, list);
+                }
+                list.add(hardwareType);
+            }
         }
-      }
-      throw new IllegalArgumentException("Unexpected capability name " + type);
     }
-  }
-
-  private static final Set<String> reservedWordsForFtcJava = buildReservedWordsForFtcJava();
-
-  /**
-   * A {@link Map} from xmlTag to List of {@link HardwareType}.
-   */
-  private static final Map<String, List<HardwareType>> XML_TAG_TO_HARDWARE_TYPES =
-      new HashMap<String, List<HardwareType>>();
-  static {
-    for (HardwareType hardwareType : HardwareType.values()) {
-      for (String xmlTag : hardwareType.xmlTags) {
-        List<HardwareType> list = (List<HardwareType>) XML_TAG_TO_HARDWARE_TYPES.get(xmlTag);
-        if (list == null) {
-          list = new ArrayList<HardwareType>();
-          XML_TAG_TO_HARDWARE_TYPES.put(xmlTag, list);
+    
+    // Prevent instantiation of util class.
+    private HardwareUtil()
+    {
+    }
+    
+    /**
+     * Returns the corresponding {@link HardwareType}s for the given {@link DeviceConfiguration}.
+     */
+    static Iterable<HardwareType> getHardwareTypes(DeviceConfiguration deviceConfiguration)
+    {
+        return getHardwareTypes(deviceConfiguration.getConfigurationType().getXmlTag());
+    }
+    
+    /**
+     * Returns the corresponding {@link HardwareType}s for the given XML tag.
+     */
+    // visible for testing
+    static Iterable<HardwareType> getHardwareTypes(String xmlTag)
+    {
+        return XML_TAG_TO_HARDWARE_TYPES.containsKey(xmlTag)
+                ? Collections.<HardwareType>unmodifiableList(XML_TAG_TO_HARDWARE_TYPES.get(xmlTag))
+                : Collections.<HardwareType>emptyList();
+    }
+    
+    /**
+     * Returns the JavaScript code related to the hardware in the active configuration.
+     */
+    public static String fetchJavaScriptForHardware() throws IOException
+    {
+        return fetchJavaScriptForHardware(HardwareItemMap.newHardwareItemMap());
+    }
+    
+    /**
+     * Returns the JavaScript code related to the hardware in the given {@link HardwareItem}.
+     */
+    // visible for testing
+    public static String fetchJavaScriptForHardware(HardwareItemMap hardwareItemMap) throws IOException
+    {
+        Context                  context      = AppUtil.getDefContext();
+        AssetManager             assetManager = context.getAssets();
+        StringBuilder            jsHardware   = new StringBuilder().append("\n");
+        Map<Capability, Boolean> capabilities = getCapabilities(hardwareItemMap);
+        
+        Set<String> additionalReservedWordsForFtcJava = new HashSet<>();
+        Set<String> methodLookupStrings               = new HashSet<>();
+        String toolbox = generateToolbox(hardwareItemMap,
+                                         capabilities,
+                                         assetManager,
+                                         additionalReservedWordsForFtcJava,
+                                         methodLookupStrings)
+                .replace("\n", " ")
+                .replaceAll("\\> +\\<", "><");
+        // The toolbox is added at the end, because it makes it easier to troubleshoot problems with
+        // this code.
+        
+        Set<String>       teleOpNames       = new TreeSet<>();
+        RegisteredOpModes registeredOpModes = RegisteredOpModes.getInstance();
+        registeredOpModes.waitOpModesRegistered();
+        for (OpModeMeta opModeMeta : registeredOpModes.getOpModes())
+        {
+            if (opModeMeta.flavor == OpModeMeta.Flavor.TELEOP)
+            {
+                teleOpNames.add(opModeMeta.name);
+            }
         }
-        list.add(hardwareType);
-      }
-    }
-  }
-
-  // Prevent instantiation of util class.
-  private HardwareUtil() {
-  }
-
-  /**
-   * Returns the corresponding {@link HardwareType}s for the given XML tag.
-   */
-  // visible for testing
-  static Iterable<HardwareType> getHardwareTypes(String xmlTag) {
-    return XML_TAG_TO_HARDWARE_TYPES.containsKey(xmlTag)
-        ? Collections.<HardwareType>unmodifiableList(XML_TAG_TO_HARDWARE_TYPES.get(xmlTag))
-        : Collections.<HardwareType>emptyList();
-  }
-
-  /**
-   * Returns the corresponding {@link HardwareType}s for the given {@link DeviceConfiguration}.
-   */
-  static Iterable<HardwareType> getHardwareTypes(DeviceConfiguration deviceConfiguration) {
-    return getHardwareTypes(deviceConfiguration.getConfigurationType().getXmlTag());
-  }
-
-  /**
-   * Returns the JavaScript code related to the hardware in the active configuration.
-   */
-  public static String fetchJavaScriptForHardware() throws IOException {
-    return fetchJavaScriptForHardware(HardwareItemMap.newHardwareItemMap());
-  }
-
-  /**
-   * Returns the JavaScript code related to the hardware in the given {@link HardwareItem}.
-   */
-  // visible for testing
-  public static String fetchJavaScriptForHardware(HardwareItemMap hardwareItemMap) throws IOException {
-    Context context = AppUtil.getDefContext();
-    AssetManager assetManager = context.getAssets();
-    StringBuilder jsHardware = new StringBuilder().append("\n");
-    Map<Capability, Boolean> capabilities = getCapabilities(hardwareItemMap);
-
-    Set<String> additionalReservedWordsForFtcJava = new HashSet<>();
-    Set<String> methodLookupStrings = new HashSet<>();
-    String toolbox = generateToolbox(hardwareItemMap, capabilities, assetManager, additionalReservedWordsForFtcJava, methodLookupStrings)
-        .replace("\n", " ")
-        .replaceAll("\\> +\\<", "><");
-    // The toolbox is added at the end, because it makes it easier to troubleshoot problems with
-    // this code.
-
-    Set<String> teleOpNames = new TreeSet<>();
-    RegisteredOpModes registeredOpModes = RegisteredOpModes.getInstance();
-    registeredOpModes.waitOpModesRegistered();
-    for (OpModeMeta opModeMeta : registeredOpModes.getOpModes()) {
-      if (opModeMeta.flavor == OpModeMeta.Flavor.TELEOP) {
-        teleOpNames.add(opModeMeta.name);
-      }
-    }
-    jsHardware.append("var AUTO_TRANSITION_OPTIONS = [\n");
-    for (String teleOpName : teleOpNames) {
-      jsHardware.append("  '").append(teleOpName).append("',\n");
-    }
-    jsHardware.append("];\n\n");
-
-    jsHardware
-        .append("var currentGameName = '" + CURRENT_GAME_NAME + "';\n")
-        .append("var tfodCurrentGameBlocksFirstName = '" + TFOD_CURRENT_GAME_BLOCKS_FIRST_NAME + "';\n")
-        .append("var vuforiaCurrentGameBlocksFirstName = '" + VUFORIA_CURRENT_GAME_BLOCKS_FIRST_NAME + "';\n")
-        .append("\n");
-
-    jsHardware
-        .append("var methodLookupStrings = [\n");
-    for (String methodLookupString : methodLookupStrings) {
-      jsHardware.append("  '").append(methodLookupString).append("',\n");
-    }
-    jsHardware
-        .append("];\n\n");
-
-
-    jsHardware
-        .append("function isValidProjectName(projectName) {\n")
-        .append("  if (projectName) {\n")
-        .append("    return /").append(ProjectsUtil.VALID_PROJECT_REGEX).append("/.test(projectName);\n")
-        .append("  }\n")
-        .append("  return false;\n")
-        .append("}\n\n");
-
-    jsHardware
-        .append("function isValidSoundName(soundName) {\n")
-        .append("  if (soundName) {\n")
-        .append("    return /").append(SoundsUtil.VALID_SOUND_REGEX).append("/.test(soundName);\n")
-        .append("  }\n")
-        .append("  return false;\n")
-        .append("}\n\n");
-
-    StringBuilder blinkinPatternTooltips = new StringBuilder();
-    StringBuilder blinkinPatternFromTextTooltip = new StringBuilder();
-    blinkinPatternTooltips
-        .append("var BLINKIN_PATTERN_TOOLTIPS = [\n");
-    blinkinPatternFromTextTooltip
-        .append("var BLINKIN_PATTERN_FROM_TEXT_TOOLTIP =\n")
-        .append("    'Returns the pattern associated with the given text. Valid input is ' +\n");
-    BlinkinPattern[] blinkinPatterns = BlinkinPattern.values();
-    BlinkinPattern blinkinPattern = blinkinPatterns[0];
-    for (int i = 0; i < blinkinPatterns.length - 1; blinkinPattern = blinkinPatterns[++i]) {
-      blinkinPatternTooltips
+        jsHardware.append("var AUTO_TRANSITION_OPTIONS = [\n");
+        for (String teleOpName : teleOpNames)
+        {
+            jsHardware.append("  '").append(escapeSingleQuotes(teleOpName)).append("',\n");
+        }
+        jsHardware.append("];\n\n");
+        
+        jsHardware
+                .append("var currentGameName = '").append(escapeSingleQuotes(CURRENT_GAME_NAME)).append("';\n")
+                .append("var tfodCurrentGameBlocksFirstName = '").append(escapeSingleQuotes(
+                TFOD_CURRENT_GAME_BLOCKS_FIRST_NAME)).append("';\n")
+                .append("var vuforiaCurrentGameBlocksFirstName = '").append(escapeSingleQuotes(
+                VUFORIA_CURRENT_GAME_BLOCKS_FIRST_NAME)).append("';\n")
+                .append("\n");
+        
+        jsHardware
+                .append("var methodLookupStrings = [\n");
+        for (String methodLookupString : methodLookupStrings)
+        {
+            jsHardware.append("  '").append(methodLookupString).append("',\n");
+        }
+        jsHardware
+                .append("];\n\n");
+        
+        jsHardware
+                .append("function isValidProjectName(projectName) {\n")
+                .append("  if (projectName) {\n")
+                .append("    return /").append(ProjectsUtil.VALID_PROJECT_REGEX).append("/.test(projectName);\n")
+                .append("  }\n")
+                .append("  return false;\n")
+                .append("}\n\n");
+        
+        jsHardware
+                .append("function isValidSoundName(soundName) {\n")
+                .append("  if (soundName) {\n")
+                .append("    return /").append(SoundsUtil.VALID_SOUND_REGEX).append("/.test(soundName);\n")
+                .append("  }\n")
+                .append("  return false;\n")
+                .append("}\n\n");
+        
+        StringBuilder blinkinPatternTooltips        = new StringBuilder();
+        StringBuilder blinkinPatternFromTextTooltip = new StringBuilder();
+        blinkinPatternTooltips
+                .append("var BLINKIN_PATTERN_TOOLTIPS = [\n");
+        blinkinPatternFromTextTooltip
+                .append("var BLINKIN_PATTERN_FROM_TEXT_TOOLTIP =\n")
+                .append("    'Returns the pattern associated with the given text. Valid input is ' +\n");
+        BlinkinPattern[] blinkinPatterns = BlinkinPattern.values();
+        BlinkinPattern   blinkinPattern  = blinkinPatterns[0];
+        for (int i = 0; i < blinkinPatterns.length - 1; blinkinPattern = blinkinPatterns[++i])
+        {
+            blinkinPatternTooltips
           .append("  ['").append(blinkinPattern).append("', 'The BlinkinPattern value ")
           .append(blinkinPattern).append(".'],\n");
       blinkinPatternFromTextTooltip
@@ -707,377 +711,489 @@ public class HardwareUtil {
         .append("  }\n")
         .append("  return '';\n")
         .append("}\n\n");
-
-    // Generate the JS method getWarningForCapabilityRequestedBySample which takes a capability
-    // that is requested by a sample op mode.
-    // If the system does not have the capability and the user should be warned about this,
-    // the method returns the warning message.
-    // If the system has the capability or no warning is needed, the method returns ''.
-    jsHardware
-        .append("function getWarningForCapabilityRequestedBySample(capability) {\n")
-        .append("  switch (capability) {\n");
-
-    for (Capability capability : Capability.values()) {
-      boolean capable = capabilities.get(capability);
-
-      // If there's no built-in camera, but there is a webcam, our code will use the webcam. So,
-      // no warning is necessary.
-      if (capability == Capability.CAMERA && !capable) {
-        if (capabilities.get(Capability.WEBCAM)) {
-          capable = true;
-        }
-      }
-
-      if (!capable) {
-        String warning = getCapabilityWarning(capability);
-        if (warning != null) {
-          jsHardware
-              .append("    case '").append(capability).append("':\n")
-              .append("      return '").append(warning).append("';\n");
-        }
-      }
-    }
-    jsHardware
-        .append("  }\n")
-        .append("  return '';\n")
-        .append("}\n\n");
-
-    // Put the toolbox at the end, because it makes it easier to troubleshoot problems with this
-    // code.
-    jsHardware
-        .append("function getToolbox() {\n")
-        .append("  return '").append(escapeSingleQuotes(toolbox)).append("';\n")
-        .append("}\n\n");
-
-    return jsHardware.toString();
-  }
-
-  /**
-   * Generates a visible name for a blockly dropdown item.
-   */
-  static String makeVisibleNameForDropdownItem(String name) {
-    int length = name.length();
-    StringBuilder visibleName = new StringBuilder();
-
-    for (int i = 0; i < length; i++) {
-      char ch = name.charAt(i);
-      if (ch == ' ') {
-        visibleName.append('\u00A0');
-      } else {
-        visibleName.append(ch);
-      }
-    }
-    return visibleName.toString();
-  }
-
-  private static void addLanguage(String languageCode, String languageName, StringBuilder dropdown, StringBuilder tooltips) {
-    dropdown
-        .append("      ['")
-        .append(escapeSingleQuotes(makeVisibleNameForDropdownItem(languageCode)))
-        .append("', '")
-        .append(escapeSingleQuotes(languageCode))
-        .append("'],\n");
-    tooltips
-        .append("  ['")
-        .append(escapeSingleQuotes(languageCode))
-        .append("', 'The language code for ")
-        .append(escapeSingleQuotes(languageName))
-        .append(".'],\n");
-  }
-
-  private static void addCountry(String countryCode, String countryName, StringBuilder dropdown, StringBuilder tooltips) {
-    dropdown
-        .append("      ['")
-        .append(escapeSingleQuotes(makeVisibleNameForDropdownItem(countryCode)))
-        .append("', '")
-        .append(escapeSingleQuotes(countryCode))
-        .append("'],\n");
-    tooltips
-        .append("  ['")
-        .append(escapeSingleQuotes(countryCode))
-        .append("', 'The country code for ")
-        .append(escapeSingleQuotes(countryName))
-        .append(".'],\n");
-  }
-
-  private static void appendCreateDropdownFunction(StringBuilder jsHardware,
-      String functionName, List<HardwareItem> hardwareItems) {
-    jsHardware
-        .append("function ").append(functionName).append("() {\n")
-        .append("  var CHOICES = [\n");
-    for (HardwareItem hardwareItem : hardwareItems) {
-      jsHardware
-          .append("      ['").append(escapeSingleQuotes(hardwareItem.visibleName)).append("', '")
-          .append(hardwareItem.identifier).append("'],\n");
-    }
-    jsHardware
-        .append("  ];\n")
-        .append("  return createFieldDropdown(CHOICES);\n")
-        .append("}\n\n");
-  }
-
-  private static List<HardwareItem> getHardwareItemsForDcMotorEx(List<HardwareItem> hardwareItemsForDcMotor) {
-    List<HardwareItem> hardwareItemsForDcMotorEx = new ArrayList<>();
-    for (HardwareItem hardwareItemForDcMotor : hardwareItemsForDcMotor) {
-      if (hardwareItemForDcMotor.hasAncestor(HardwareType.LYNX_MODULE)) {
-        hardwareItemsForDcMotorEx.add(hardwareItemForDcMotor);
-      }
-    }
-    return hardwareItemsForDcMotorEx;
-  }
-
-  /**
-   * Generates the toolbox for the blocks editor, excluding the categories for {@link HardwareType}s
-   * that do not exist in the given {@link HardwareItemMap}.
-   */
-  @SuppressWarnings("deprecation")
-  private static String generateToolbox(HardwareItemMap hardwareItemMap,
-      Map<Capability, Boolean> capabilities, AssetManager assetManager,
-      Set<String> additionalReservedWordsForFtcJava,
-      Set<String> methodLookupStrings) throws IOException {
-    StringBuilder xmlToolbox = new StringBuilder();
-    xmlToolbox.append("<xml id=\"toolbox\" style=\"display: none\">\n");
-
-    // assetManager can be null during tests.
-    if (assetManager != null) {
-      addAsset(xmlToolbox, assetManager, "toolbox/linear_op_mode.xml");
-      addAsset(xmlToolbox, assetManager, "toolbox/gamepad.xml");
-    }
-
-    for (ToolboxFolder toolboxFolder : ToolboxFolder.values()) {
-      xmlToolbox.append(" <category name=\"").append(toolboxFolder.label)
-          .append("\">\n");
-      // Sort the hardware types by toolboxCategoryName.
-      SortedSet<HardwareType> hardwareTypes = new TreeSet<>(HardwareType.BY_TOOLBOX_CATEGORY_NAME);
-      hardwareTypes.addAll(hardwareItemMap.getHardwareTypes());
-      for (HardwareType hardwareType : hardwareTypes) {
-        if (hardwareType.toolboxFolder == toolboxFolder) {
-          // Some HardwareTypes might have a null toolboxCategoryName. This allows us to support
-          // certain hardware types, even though we don't actually provide blocks.
-          if (hardwareType.toolboxCategoryName != null) {
-            addHardwareCategoryToToolbox(
-                xmlToolbox, hardwareType, hardwareItemMap.getHardwareItems(hardwareType), assetManager);
-            if (hardwareType == HardwareType.BNO055IMU) {
-              if (assetManager != null) {
-                addAsset(
-                    xmlToolbox, assetManager, "toolbox/bno055imu_parameters.xml");
-              }
+        
+        // Generate the JS method getWarningForCapabilityRequestedBySample which takes a capability
+        // that is requested by a sample op mode.
+        // If the system does not have the capability and the user should be warned about this,
+        // the method returns the warning message.
+        // If the system has the capability or no warning is needed, the method returns ''.
+        jsHardware
+                .append("function getWarningForCapabilityRequestedBySample(capability) {\n")
+                .append("  switch (capability) {\n");
+        
+        for (Capability capability : Capability.values())
+        {
+            boolean capable = capabilities.get(capability);
+            
+            // If there's no built-in camera, but there is a webcam, our code will use the webcam. So,
+            // no warning is necessary.
+            if (capability == Capability.CAMERA && !capable)
+            {
+                if (capabilities.get(Capability.WEBCAM))
+                {
+                    capable = true;
+                }
             }
-          }
-        }
-      }
-      xmlToolbox.append(" </category>\n");
-    }
-
-    addAndroidCategoriesToToolbox(xmlToolbox, assetManager);
-
-    if (assetManager != null) {
-      addAssetWithPlaceholders(xmlToolbox, assetManager, capabilities, "toolbox/utilities.xml");
-      addAsset(xmlToolbox, assetManager, "toolbox/misc.xml");
-    }
-
-    Map<Class, Set<Method>> methodsByClass = BlocksClassFilter.getInstance().getMethodsByClass();
-    if (!methodsByClass.isEmpty()) {
-      xmlToolbox.append("<category name=\"Java Classes\">\n");
-      for (Map.Entry<Class, Set<Method>> entry : methodsByClass.entrySet()) {
-        Class clazz = entry.getKey();
-        String className = clazz.getName();
-        if (className.startsWith("org.firstinspires.ftc.teamcode.")) {
-          className = className.substring(31);
-          additionalReservedWordsForFtcJava.add(className);
-        }
-        String userVisibleClassName = className.replace('$', '.');
-        xmlToolbox.append("<category name=\"").append(userVisibleClassName).append("\">\n");
-        Set<Method> methods = entry.getValue();
-        for (Method method : methods) {
-          String returnType = method.getReturnType().getName();
-          String blockType = returnType.equals("void") ? "misc_callJava_noReturn" : "misc_callJava_return";
-          String methodName = method.getName();
-          Class[] parameterTypes = method.getParameterTypes();
-          ExportToBlocks exportToBlocks = method.getAnnotation(ExportToBlocks.class);
-          String comment = exportToBlocks.comment();
-          String tooltip = exportToBlocks.tooltip();
-          String[] parameterLabels = getParameterLabels(method);
-          String methodLookupString = BlocksClassFilter.getLookupString(method);
-          methodLookupStrings.add(methodLookupString);
-          xmlToolbox
-              .append("<block type=\"").append(blockType).append("\">\n")
-              .append("<field name=\"CLASS_NAME\">").append(userVisibleClassName).append("</field>")
-              .append("<field name=\"METHOD_NAME\">").append(methodName).append("</field>")
-              .append("<mutation")
-              .append(" methodLookupString=\"").append(methodLookupString).append("\"")
-              .append(" parameterCount=\"").append(parameterTypes.length).append("\"")
-              .append(" returnType=\"").append(returnType).append("\"")
-              .append(" comment=\"").append(comment).append("\"")
-              .append(" tooltip=\"").append(tooltip).append("\"")
-              .append(" accessMethod=\"").append(accessMethod(method.getReturnType())).append("\"")
-              .append(" convertReturnValue=\"").append(convertReturnValue(method.getReturnType())).append("\"");
-          StringBuilder argValues = new StringBuilder();
-          int i = 0;
-          List<String> gamepads = new ArrayList<>();
-          for (Class parameterType : parameterTypes) {
-            xmlToolbox.append(" argLabel").append(i).append("=\"").append(parameterLabels[i]).append("\"");
-            String argType = parameterType.getName();
-            xmlToolbox.append(" argType").append(i).append("=\"").append(argType).append("\"");
-            String argAuto = parameterProvidedAutomatically(parameterType, parameterLabels[i], gamepads);
-            xmlToolbox.append(" argAuto").append(i).append("=\"").append(argAuto != null ? argAuto : "").append("\"");
-            if (argAuto != null) {
-              // No socket if parameter is provided automatically.
-            } else if (argType.equals("boolean")
-                || argType.equals("java.lang.Boolean")) {
-              argValues
-                  .append("<value name=\"ARG" + i + "\">")
-                  .append(ToolboxUtil.makeBooleanShadow(false))
-                  .append("</value>\n");
-            } else if (argType.equals("char")
-                || argType.equals("java.lang.Character")
-                || argType.equals("java.lang.String")) {
-              argValues
-                  .append("<value name=\"ARG" + i + "\">")
-                  .append(ToolboxUtil.makeTextShadow("A"))
-                  .append("</value>\n");
-            } else if (argType.equals("byte")
-                || argType.equals("java.lang.Byte")
-                || argType.equals("short")
-                || argType.equals("java.lang.Short")
-                || argType.equals("int")
-                || argType.equals("java.lang.Integer")
-                || argType.equals("long")
-                || argType.equals("java.lang.Long")
-                || argType.equals("float")
-                || argType.equals("java.lang.Float")
-                || argType.equals("double")
-                || argType.equals("java.lang.Double")) {
-              argValues
-                  .append("<value name=\"ARG" + i + "\">")
-                  .append(ToolboxUtil.makeNumberShadow(0))
-                  .append("</value>\n");
-            } else {
-              // Leave other sockets empty?
+            
+            if (!capable)
+            {
+                String warning = getCapabilityWarning(capability);
+                if (warning != null)
+                {
+                    jsHardware
+                            .append("    case '").append(capability).append("':\n")
+                            .append("      return '").append(warning).append("';\n");
+                }
             }
-            i++;
-          }
-          xmlToolbox
-              .append("/>"); // end of mutation
-          xmlToolbox
-              .append(argValues)
-              .append("</block>\n");
         }
-        xmlToolbox.append("</category>\n");
-      }
-      xmlToolbox.append("</category>\n");
+        jsHardware
+                .append("  }\n")
+                .append("  return '';\n")
+                .append("}\n\n");
+        
+        // Put the toolbox at the end, because it makes it easier to troubleshoot problems with this
+        // code.
+        jsHardware
+                .append("function getToolbox() {\n")
+                .append("  return '").append(escapeSingleQuotes(toolbox)).append("';\n")
+                .append("}\n\n");
+        
+        return jsHardware.toString();
     }
-
-    xmlToolbox.append("</xml>");
-    return xmlToolbox.toString();
-  }
-
-  public static String[] getParameterLabels(Method method) {
-    ExportToBlocks exportToBlocks = method.getAnnotation(ExportToBlocks.class);
-    String[] parameterLabels = exportToBlocks.parameterLabels();
-    int length = method.getParameterTypes().length;
-    if (parameterLabels.length != length) {
-      parameterLabels = new String[length];
-      for (int i = 0; i < parameterLabels.length; i++) {
-        parameterLabels[i] = "";
-      }
+    
+    /**
+     * Generates the toolbox for the blocks editor, excluding the categories for {@link HardwareType}s
+     * that do not exist in the given {@link HardwareItemMap}.
+     */
+    @SuppressWarnings ("deprecation")
+    private static String generateToolbox(HardwareItemMap hardwareItemMap,
+                                          Map<Capability, Boolean> capabilities, AssetManager assetManager,
+                                          Set<String> additionalReservedWordsForFtcJava,
+                                          Set<String> methodLookupStrings) throws IOException
+    {
+        StringBuilder xmlToolbox = new StringBuilder();
+        xmlToolbox.append("<xml id=\"toolbox\" style=\"display: none\">\n");
+        
+        // assetManager can be null during tests.
+        if (assetManager != null)
+        {
+            addAsset(xmlToolbox, assetManager, "toolbox/linear_op_mode.xml");
+            addAsset(xmlToolbox, assetManager, "toolbox/gamepad.xml");
+        }
+        
+        for (ToolboxFolder toolboxFolder : ToolboxFolder.values())
+        {
+            xmlToolbox.append(" <category name=\"").append(toolboxFolder.label)
+                      .append("\">\n");
+            // Sort the hardware types by toolboxCategoryName.
+            SortedSet<HardwareType> hardwareTypes = new TreeSet<>(HardwareType.BY_TOOLBOX_CATEGORY_NAME);
+            hardwareTypes.addAll(hardwareItemMap.getHardwareTypes());
+            for (HardwareType hardwareType : hardwareTypes)
+            {
+                if (hardwareType.toolboxFolder == toolboxFolder)
+                {
+                    // Some HardwareTypes might have a null toolboxCategoryName. This allows us to support
+                    // certain hardware types, even though we don't actually provide blocks.
+                    if (hardwareType.toolboxCategoryName != null)
+                    {
+                        addHardwareCategoryToToolbox(
+                                xmlToolbox, hardwareType, hardwareItemMap.getHardwareItems(hardwareType), assetManager);
+                        if (hardwareType == HardwareType.BNO055IMU)
+                        {
+                            if (assetManager != null)
+                            {
+                                addAsset(
+                                        xmlToolbox, assetManager, "toolbox/bno055imu_parameters.xml");
+                            }
+                        }
+                    }
+                }
+            }
+            xmlToolbox.append(" </category>\n");
+        }
+        
+        addAndroidCategoriesToToolbox(xmlToolbox, assetManager);
+        
+        if (assetManager != null)
+        {
+            addAssetWithPlaceholders(xmlToolbox, assetManager, capabilities, "toolbox/utilities.xml");
+            addAsset(xmlToolbox, assetManager, "toolbox/misc.xml");
+        }
+        
+        Map<Class, Set<Method>> methodsByClass = BlocksClassFilter.getInstance().getMethodsByClass();
+        if (!methodsByClass.isEmpty())
+        {
+            xmlToolbox.append("<category name=\"Java Classes\">\n");
+            for (Map.Entry<Class, Set<Method>> entry : methodsByClass.entrySet())
+            {
+                Class  clazz     = entry.getKey();
+                String className = clazz.getName();
+                if (className.startsWith("org.firstinspires.ftc.teamcode."))
+                {
+                    className = className.substring(31);
+                    additionalReservedWordsForFtcJava.add(className);
+                }
+                String userVisibleClassName = className.replace('$', '.');
+                xmlToolbox.append("<category name=\"").append(userVisibleClassName).append("\">\n");
+                Set<Method> methods = entry.getValue();
+                for (Method method : methods)
+                {
+                    ExportToBlocks exportToBlocks = method.getAnnotation(ExportToBlocks.class);
+                    if (exportToBlocks == null)
+                    {
+                        continue;
+                    }
+                    String returnType = method.getReturnType().getName();
+                    String blockType = returnType.equals("void") ? "misc_callJava_noReturn" :
+                            "misc_callJava_return";
+                    String   methodName         = method.getName();
+                    Class[]  parameterTypes     = method.getParameterTypes();
+                    String   comment            = exportToBlocks.comment();
+                    String   tooltip            = exportToBlocks.tooltip();
+                    String[] parameterLabels    = getParameterLabels(method);
+                    String   methodLookupString = BlocksClassFilter.getLookupString(method);
+                    methodLookupStrings.add(methodLookupString);
+                    xmlToolbox
+                            .append("<block type=\"").append(blockType).append("\">\n")
+                            .append("<field name=\"CLASS_NAME\">").append(userVisibleClassName).append("</field>")
+                            .append("<field name=\"METHOD_NAME\">").append(methodName).append("</field>")
+                            .append("<mutation")
+                            .append(" methodLookupString=\"").append(methodLookupString).append("\"")
+                            .append(" parameterCount=\"").append(parameterTypes.length).append("\"")
+                            .append(" returnType=\"").append(returnType).append("\"")
+                            .append(" comment=\"").append(comment).append("\"")
+                            .append(" tooltip=\"").append(tooltip).append("\"")
+                            .append(" accessMethod=\"").append(accessMethod(method.getReturnType())).append("\"")
+                            .append(" convertReturnValue=\"").append(convertReturnValue(method.getReturnType())).append(
+                            "\"");
+                    StringBuilder argValues = new StringBuilder();
+                    int           i         = 0;
+                    List<String>  gamepads  = new ArrayList<>();
+                    for (Class parameterType : parameterTypes)
+                    {
+                        xmlToolbox.append(" argLabel").append(i).append("=\"").append(parameterLabels[i]).append("\"");
+                        String argType = parameterType.getName();
+                        xmlToolbox.append(" argType").append(i).append("=\"").append(argType).append("\"");
+                        String argAuto = parameterProvidedAutomatically(parameterType, parameterLabels[i], gamepads);
+                        xmlToolbox.append(" argAuto")
+                                  .append(i)
+                                  .append("=\"")
+                                  .append(argAuto != null ? argAuto : "")
+                                  .append("\"");
+                        if (argAuto != null)
+                        {
+                            // No socket if parameter is provided automatically.
+                        }
+                        else if (argType.equals("boolean")
+                                || argType.equals("java.lang.Boolean"))
+                        {
+                            argValues
+                                    .append("<value name=\"ARG" + i + "\">")
+                                    .append(ToolboxUtil.makeBooleanShadow(false))
+                                    .append("</value>\n");
+                        }
+                        else if (argType.equals("char")
+                                || argType.equals("java.lang.Character")
+                                || argType.equals("java.lang.String"))
+                        {
+                            argValues
+                                    .append("<value name=\"ARG" + i + "\">")
+                                    .append(ToolboxUtil.makeTextShadow("A"))
+                                    .append("</value>\n");
+                        }
+                        else if (argType.equals("byte")
+                                || argType.equals("java.lang.Byte")
+                                || argType.equals("short")
+                                || argType.equals("java.lang.Short")
+                                || argType.equals("int")
+                                || argType.equals("java.lang.Integer")
+                                || argType.equals("long")
+                                || argType.equals("java.lang.Long")
+                                || argType.equals("float")
+                                || argType.equals("java.lang.Float")
+                                || argType.equals("double")
+                                || argType.equals("java.lang.Double"))
+                        {
+                            argValues
+                                    .append("<value name=\"ARG" + i + "\">")
+                                    .append(ToolboxUtil.makeNumberShadow(0))
+                                    .append("</value>\n");
+                        }
+                        else
+                        {
+                            // Leave other sockets empty?
+                        }
+                        i++;
+                    }
+                    xmlToolbox
+                            .append("/>"); // end of mutation
+                    xmlToolbox
+                            .append(argValues)
+                            .append("</block>\n");
+                }
+                xmlToolbox.append("</category>\n");
+            }
+            xmlToolbox.append("</category>\n");
+        }
+        
+        xmlToolbox.append("</xml>");
+        return xmlToolbox.toString();
     }
-    return parameterLabels;
-  }
-
-  private static String accessMethod(Class returnType) {
-    if (returnType.equals(boolean.class) ||
-        returnType.equals(Boolean.class)) {
-      return "callJava_boolean";
-    } else if (
-        returnType.equals(char.class) ||
-        returnType.equals(Character.class) ||
-        returnType.equals(String.class) ||
-        returnType.equals(byte.class) ||
-        returnType.equals(Byte.class) ||
-        returnType.equals(short.class) ||
-        returnType.equals(Short.class) ||
-        returnType.equals(int.class) ||
-        returnType.equals(Integer.class) ||
-        returnType.equals(long.class) ||
-        returnType.equals(Long.class) ||
-        returnType.equals(float.class) ||
-        returnType.equals(Float.class) ||
-        returnType.equals(double.class) ||
-        returnType.equals(Double.class) ||
-        returnType.isEnum()) {
-      return "callJava_String";
+    
+    private static void addLanguage(String languageCode, String languageName, StringBuilder dropdown,
+                                    StringBuilder tooltips)
+    {
+        dropdown
+                .append("      ['")
+                .append(escapeSingleQuotes(makeVisibleNameForDropdownItem(languageCode)))
+                .append("', '")
+                .append(escapeSingleQuotes(languageCode))
+                .append("'],\n");
+        tooltips
+                .append("  ['")
+                .append(escapeSingleQuotes(languageCode))
+                .append("', 'The language code for ")
+                .append(escapeSingleQuotes(languageName))
+                .append(".'],\n");
     }
-    return "callJava";
-  }
-
-  private static String convertReturnValue(Class returnType) {
-    if (returnType.equals(byte.class) ||
-        returnType.equals(Byte.class) ||
-        returnType.equals(short.class) ||
-        returnType.equals(Short.class) ||
-        returnType.equals(int.class) ||
-        returnType.equals(Integer.class) ||
-        returnType.equals(long.class) ||
-        returnType.equals(Long.class) ||
-        returnType.equals(float.class) ||
-        returnType.equals(Float.class) ||
-        returnType.equals(double.class) ||
-        returnType.equals(Double.class)) {
-      return "Number";
+    
+    private static void addCountry(String countryCode, String countryName, StringBuilder dropdown,
+                                   StringBuilder tooltips)
+    {
+        dropdown
+                .append("      ['")
+                .append(escapeSingleQuotes(makeVisibleNameForDropdownItem(countryCode)))
+                .append("', '")
+                .append(escapeSingleQuotes(countryCode))
+                .append("'],\n");
+        tooltips
+                .append("  ['")
+                .append(escapeSingleQuotes(countryCode))
+                .append("', 'The country code for ")
+                .append(escapeSingleQuotes(countryName))
+                .append(".'],\n");
     }
-    return "";
-  }
-
-  private static String parameterProvidedAutomatically(Class parameterType, String parameterLabel, List<String> gamepads) {
-    // Return the value that should be used for the parameter when blocks is exported to java.
-    // For Javascript, null is used since the real value is determined in MiscAccess.java
-    if (parameterType.equals(LinearOpMode.class) ||
-        parameterType.equals(OpMode.class)) {
-      return "this";
-    } else if (parameterType.equals(HardwareMap.class)) {
-      return "hardwareMap";
-    } else if (parameterType.equals(Telemetry.class)) {
-      return "telemetry";
-    } else if (parameterType.equals(Gamepad.class)) {
-      // If the parameter label is gamepad1 or gamepad2, return that.
-      if (parameterLabel.equals("gamepad1") || parameterLabel.equals("gamepad2")) {
-        return parameterLabel;
-      }
-      // Otherwise, return the first element in the gamepads list. This will be "gamepad1" for the
-      // first Gamepad parameter and "gamepad2" for the second Gamepad parameter.
-      if (gamepads.isEmpty()) {
-        gamepads.add("gamepad1");
-        gamepads.add("gamepad2");
-      }
-      return gamepads.remove(0);
+    
+    /**
+     * Generates a visible name for a blockly dropdown item.
+     */
+    static String makeVisibleNameForDropdownItem(String name)
+    {
+        int           length      = name.length();
+        StringBuilder visibleName = new StringBuilder();
+        
+        for (int i = 0; i < length; i++)
+        {
+            char ch = name.charAt(i);
+            if (ch == ' ')
+            {
+                visibleName.append('\u00A0');
+            }
+            else
+            {
+                visibleName.append(ch);
+            }
+        }
+        return visibleName.toString();
     }
-    return null;
-  }
-
-  private static String getCapabilityWarning(Capability capability) {
-    switch (capability) {
-      case CAMERA:
-        return "This device does not have a camera.";
-      case WEBCAM:
-        return "The current configuration has no webcam.";
-      case SWITCHABLE_CAMERA:
-        return "The current configuration does not have multiple webcams.";
-      default:
-        // No warning for Capability.VUFORIA or Capability.TFOD. The user will see the warning about camera/webcam.
+    
+    private static void appendCreateDropdownFunction(StringBuilder jsHardware,
+                                                     String functionName, List<HardwareItem> hardwareItems)
+    {
+        jsHardware
+                .append("function ").append(functionName).append("() {\n")
+                .append("  var CHOICES = [\n");
+        for (HardwareItem hardwareItem : hardwareItems)
+        {
+            jsHardware
+                    .append("      ['").append(escapeSingleQuotes(hardwareItem.visibleName)).append("', '")
+                    .append(hardwareItem.identifier).append("'],\n");
+        }
+        jsHardware
+                .append("  ];\n")
+                .append("  return createFieldDropdown(CHOICES);\n")
+                .append("}\n\n");
+    }
+    
+    private static List<HardwareItem> getHardwareItemsForDcMotorEx(List<HardwareItem> hardwareItemsForDcMotor)
+    {
+        List<HardwareItem> hardwareItemsForDcMotorEx = new ArrayList<>();
+        for (HardwareItem hardwareItemForDcMotor : hardwareItemsForDcMotor)
+        {
+            if (hardwareItemForDcMotor.hasAncestor(HardwareType.LYNX_MODULE))
+            {
+                hardwareItemsForDcMotorEx.add(hardwareItemForDcMotor);
+            }
+        }
+        return hardwareItemsForDcMotorEx;
+    }
+    
+    private static String getCapabilityWarning(Capability capability)
+    {
+        switch (capability)
+        {
+            case CAMERA:
+                return "This device does not have a camera.";
+            case WEBCAM:
+                return "The current configuration has no webcam.";
+            case SWITCHABLE_CAMERA:
+                return "The current configuration does not have multiple webcams.";
+            default:
+                // No warning for Capability.VUFORIA or Capability.TFOD. The user will see the warning about
+                // camera/webcam.
+                return null;
+        }
+    }
+    
+    public static String[] getParameterLabels(Method method)
+    {
+        ExportToBlocks exportToBlocks = method.getAnnotation(ExportToBlocks.class);
+        String[]       parameterLabels;
+        if (exportToBlocks != null)
+        {
+            parameterLabels = exportToBlocks.parameterLabels();
+        }
+        else
+        {
+            parameterLabels = new String[0];
+        }
+        int length = method.getParameterTypes().length;
+        if (parameterLabels.length != length)
+        {
+            parameterLabels = new String[length];
+            for (int i = 0; i < parameterLabels.length; i++)
+            {
+                parameterLabels[i] = "";
+            }
+        }
+        return parameterLabels;
+    }
+    
+    private static String accessMethod(Class returnType)
+    {
+        if (returnType.equals(boolean.class) ||
+                returnType.equals(Boolean.class))
+        {
+            return "callJava_boolean";
+        }
+        else if (
+                returnType.equals(char.class) ||
+                        returnType.equals(Character.class) ||
+                        returnType.equals(String.class) ||
+                        returnType.equals(byte.class) ||
+                        returnType.equals(Byte.class) ||
+                        returnType.equals(short.class) ||
+                        returnType.equals(Short.class) ||
+                        returnType.equals(int.class) ||
+                        returnType.equals(Integer.class) ||
+                        returnType.equals(long.class) ||
+                        returnType.equals(Long.class) ||
+                        returnType.equals(float.class) ||
+                        returnType.equals(Float.class) ||
+                        returnType.equals(double.class) ||
+                        returnType.equals(Double.class) ||
+                        returnType.isEnum())
+        {
+            return "callJava_String";
+        }
+        return "callJava";
+    }
+    
+    private static String convertReturnValue(Class returnType)
+    {
+        if (returnType.equals(byte.class) ||
+                returnType.equals(Byte.class) ||
+                returnType.equals(short.class) ||
+                returnType.equals(Short.class) ||
+                returnType.equals(int.class) ||
+                returnType.equals(Integer.class) ||
+                returnType.equals(long.class) ||
+                returnType.equals(Long.class) ||
+                returnType.equals(float.class) ||
+                returnType.equals(Float.class) ||
+                returnType.equals(double.class) ||
+                returnType.equals(Double.class))
+        {
+            return "Number";
+        }
+        return "";
+    }
+    
+    private static String parameterProvidedAutomatically(Class parameterType, String parameterLabel,
+                                                         List<String> gamepads)
+    {
+        // Return the value that should be used for the parameter when blocks is exported to java.
+        // For Javascript, null is used since the real value is determined in MiscAccess.java
+        if (parameterType.equals(LinearOpMode.class) ||
+                parameterType.equals(OpMode.class))
+        {
+            return "this";
+        }
+        else if (parameterType.equals(HardwareMap.class))
+        {
+            return "hardwareMap";
+        }
+        else if (parameterType.equals(Telemetry.class))
+        {
+            return "telemetry";
+        }
+        else if (parameterType.equals(Gamepad.class))
+        {
+            // If the parameter label is gamepad1 or gamepad2, return that.
+            if (parameterLabel.equals("gamepad1") || parameterLabel.equals("gamepad2"))
+            {
+                return parameterLabel;
+            }
+            // Otherwise, return the first element in the gamepads list. This will be "gamepad1" for the
+            // first Gamepad parameter and "gamepad2" for the second Gamepad parameter.
+            if (gamepads.isEmpty())
+            {
+                gamepads.add("gamepad1");
+                gamepads.add("gamepad2");
+            }
+            return gamepads.remove(0);
+        }
         return null;
     }
-  }
-
-  @SuppressWarnings("deprecation")
-  public static Map<Capability, Boolean> getCapabilities(HardwareItemMap hardwareItemMap) {
-    Map<Capability, Boolean> capabilities = new HashMap<>();
-    // PackageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA) incorrectly returns true on a
-    // control hub, so here I use Camera.getNumberOfCameras() to determine whether there are any
-    // built-in cameras.
-    boolean camera = android.hardware.Camera.getNumberOfCameras() > 0;
-    int numberOfWebcams = hardwareItemMap.getHardwareItems(HardwareType.WEBCAM_NAME).size();
-    boolean webcam = numberOfWebcams > 0;
+    
+    public enum Capability
+    {
+        CAMERA("camera"),
+        WEBCAM("webcam"),
+        SWITCHABLE_CAMERA("switchableCamera"),
+        VUFORIA("vuforia"),
+        TFOD("tfod");
+        
+        private final String placeholderType;
+        
+        Capability(String placeholderType)
+        {
+            this.placeholderType = placeholderType;
+        }
+        
+        static Capability fromPlaceholderType(String type)
+        {
+            for (Capability capability : Capability.values())
+            {
+                if (capability.placeholderType.equals(type))
+                {
+                    return capability;
+                }
+            }
+            throw new IllegalArgumentException("Unexpected capability name " + type);
+        }
+    }
+    
+    @SuppressWarnings ("deprecation")
+    public static Map<Capability, Boolean> getCapabilities(HardwareItemMap hardwareItemMap)
+    {
+        Map<Capability, Boolean> capabilities = new HashMap<>();
+        // PackageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA) incorrectly returns true on a
+        // control hub, so here I use Camera.getNumberOfCameras() to determine whether there are any
+        // built-in cameras.
+        boolean camera          = android.hardware.Camera.getNumberOfCameras() > 0;
+        int     numberOfWebcams = hardwareItemMap.getHardwareItems(HardwareType.WEBCAM_NAME).size();
+        boolean webcam          = numberOfWebcams > 0;
     boolean switchableCamera = numberOfWebcams > 1;
     capabilities.put(Capability.CAMERA, camera);
     capabilities.put(Capability.WEBCAM, webcam);
@@ -1177,7 +1293,6 @@ public class HardwareUtil {
   private static void addAndroidCategoriesToToolbox(
       StringBuilder xmlToolbox, AssetManager assetManager)
       throws IOException {
-    SensorManager sensorManager = (SensorManager) AppUtil.getDefContext().getSystemService(Context.SENSOR_SERVICE);
     boolean hasAccelerometer = !sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty();
     boolean hasGyroscope = !sensorManager.getSensorList(Sensor.TYPE_GYROSCOPE).isEmpty();
     boolean hasMagneticField = !sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD).isEmpty();

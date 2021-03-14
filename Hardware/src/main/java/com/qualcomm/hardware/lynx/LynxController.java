@@ -33,9 +33,11 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.qualcomm.hardware.lynx;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.qualcomm.hardware.lynx.commands.LynxCommand;
+import com.qualcomm.hardware.lynx.commands.LynxInterface;
 import com.qualcomm.hardware.lynx.commands.LynxMessage;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.Engagable;
@@ -439,110 +441,119 @@ public abstract class LynxController extends LynxCommExceptionHandler implements
             {
             return LynxController.this.module.getSerialNumber();
             }
-
-        @Override
-        public <T> T acquireI2cLockWhile(Supplier<T> supplier) throws InterruptedException, RobotCoreException, LynxNackException
+    
+            @Override
+            public <T> T acquireI2cLockWhile(Supplier<T> supplier)
+                    throws InterruptedException, RobotCoreException, LynxNackException
             {
-            return supplier.get();
+                return supplier.get();
             }
-
-        @Override
-        public void acquireNetworkTransmissionLock(LynxMessage message) throws InterruptedException
+    
+            @Override
+            public void acquireNetworkTransmissionLock(LynxMessage message) throws InterruptedException
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public void releaseNetworkTransmissionLock(LynxMessage message) throws InterruptedException
+    
+            @Override
+            public void releaseNetworkTransmissionLock(LynxMessage message) throws InterruptedException
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public void sendCommand(LynxMessage command) throws InterruptedException, LynxUnsupportedCommandException
+    
+            @Override
+            public void sendCommand(LynxMessage command) throws InterruptedException, LynxUnsupportedCommandException
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public void retransmit(LynxMessage message) throws InterruptedException
+    
+            @Override
+            public void retransmit(LynxMessage message) throws InterruptedException
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public void finishedWithMessage(LynxMessage message) throws InterruptedException
+    
+            @Override
+            public void finishedWithMessage(LynxMessage message) throws InterruptedException
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override public void resetPingTimer(@NonNull LynxMessage message)
+    
+            @Override
+            public void resetPingTimer(@NonNull LynxMessage message)
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public int getModuleAddress()
+    
+            @Override
+            public int getModuleAddress()
             {
-            return LynxController.this.module.getModuleAddress();
+                return LynxController.this.module.getModuleAddress();
             }
-
-        @Override
-        public void noteAttentionRequired()
+    
+            @Override
+            public void noteAttentionRequired()
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override
-        public int getInterfaceBaseCommandNumber(String interfaceName)
+    
+            @Override
+            public LynxInterface getInterface(String interfaceName)
             {
-            return LynxController.this.module.getInterfaceBaseCommandNumber(interfaceName);
+                return LynxController.this.module.getInterface(interfaceName);
             }
-
-        @Override
-        public boolean isParent()
+    
+            @Override
+            public boolean isParent()
             {
-            return true;    // pretty arbitrary
+                return true;    // pretty arbitrary
             }
-
-        @Override
-        public void validateCommand(LynxMessage lynxMessage) throws LynxUnsupportedCommandException
+    
+            @Override
+            public void validateCommand(LynxMessage lynxMessage) throws LynxUnsupportedCommandException
             {
             }
-
-        @Override public boolean isCommandSupported(Class<? extends LynxCommand> command)
+    
+            @Override
+            public boolean isCommandSupported(Class<? extends LynxCommand> command)
             {
-            return false;
+                return false;
             }
-
-        @Override public boolean isEngaged()
+    
+            @Override
+            public boolean isEngaged()
             {
-            return this.isEngaged;
+                return this.isEngaged;
             }
-
-        @Override public void engage()
+    
+            @Override
+            public void engage()
             {
-            this.isEngaged = true;
+                this.isEngaged = true;
             }
-
-        @Override public void disengage()
+    
+            @Override
+            public void disengage()
             {
-            this.isEngaged = false;
+                this.isEngaged = false;
             }
-
-        @Override public void noteDatagramReceived()
+    
+            @Override
+            public void noteDatagramReceived()
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override public void noteNotResponding()
+    
+            @Override
+            public void noteNotResponding()
             {
-            // do nothing
+                // do nothing
             }
-
-        @Override public boolean isNotResponding()
+    
+            @Override
+            public boolean isNotResponding()
             {
-            return false;
+                return false;
             }
         }
     }
